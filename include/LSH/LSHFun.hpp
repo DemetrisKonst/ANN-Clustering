@@ -51,7 +51,7 @@ public:
     }
   }
 
-  int HashVector (int* x) {
+  uint8_t HashVector (uint8_t* x) {
     std::vector<int> a;   // vector storing floor((Xi-Si)/W)
 
     unsigned long long int sum = 0;
@@ -81,24 +81,31 @@ private:
   int M;
 
 public:
-  AmplifiedHashFunction (double sr, int c, int k, int d, unsigned long int m) : searchRadius(sr), c(c), k(k), D(d), m(m)  {
+  // AmplifiedHashFunction (double sr, int c, int k, int d, unsigned long int m) : searchRadius(sr), c(c), k(k), D(d), m(m)  {
+  //   W = c*searchRadius;
+  //   M = pow(2, 32/k);
+  //
+  //   int* mmod = new int[d];
+  //
+  //   for (int i = 0; i < D; i++)
+  //     mmod[i] = utils::modEx(m, D-i-1, M);
+  //
+  //   for (int i = 0; i < k; i++) {
+  //     H.push_back(HashFunction(sr, c, k, d, m, mmod));
+  //   }
+  // }
+
+  AmplifiedHashFunction (double sr, int c, int k, int d, unsigned long int m, int* mmod) : searchRadius(sr), c(c), k(k), D(d), m(m)  {
     W = c*searchRadius;
     M = pow(2, 32/k);
-
-    int* mmod = new int[d];
-
-    for (int i = 0; i < D; i++)
-      mmod[i] = utils::modEx(m, D-i-1, M);
 
     for (int i = 0; i < k; i++) {
       H.push_back(HashFunction(sr, c, k, d, m, mmod));
     }
   }
 
-  unsigned long int HashVector (int* x) {
-    unsigned long int g;
-
-    std::vector<int> hValues;
+  unsigned long int HashVector (uint8_t* x) {
+    std::vector<uint8_t> hValues;
 
     for (int i = 0; i < k; i++) {
       hValues.push_back(H[i].HashVector(x));
@@ -106,7 +113,7 @@ public:
 
     // std::random_shuffle(hValues.begin(), hValues.end());
 
-    unsigned long int concatRes = utils::concatenateNumbers(hValues);
+    unsigned long int concatRes = utils::concatenateBitwise(hValues);
 
     return concatRes;
   }
