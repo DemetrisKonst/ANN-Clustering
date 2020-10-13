@@ -1,17 +1,13 @@
-#include <iostream>
-#include <string>
+#pragma once
 
 namespace utils {
-  unsigned long int concatenateNumbers (std::vector<int> n) {
-    std::string finalStr = std::to_string(n[0]);
+  unsigned long int concatenateBitwise (std::vector<uint8_t> n) {
+    unsigned long int finalNum = n[0];
 
     for (int i = 1; i < n.size(); i++) {
-      std::string tmpStr = std::to_string(n[i]);
-      finalStr += tmpStr;
+      finalNum <<= 8;
+      finalNum |= n[i];
     }
-
-    unsigned long int finalNum = stol(finalStr);
-
 
     return finalNum;
   }
