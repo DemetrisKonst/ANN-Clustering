@@ -1,8 +1,7 @@
-LSH: LSH_interface.o main.o
-	g++ object/LSH_interface.o object/main.o -o bin/LSH
+CC=g++
 
-LSH_interface.o:
-	g++ -c -o object/LSH_interface.o src/interfaces/LSH/LSH_interface.cpp
+LSH: include/LSH/LSHFun.hpp
+	g++ -o bin/LSH exc1/main.cpp
 
-main.o:
-	g++ -c -o object/main.o exc1/main.cpp
+clean:
+	rm bin/*
