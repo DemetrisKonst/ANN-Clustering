@@ -2,8 +2,7 @@
 #include <chrono>
 
 #include "../include/interfaces/LSH_interface.h"
-#include "../include/interfaces/HCUBE_interface.h"
-#include "../include/interfaces/LSH/LSH_interface.h"
+#include "../include/interfaces/LSH_interface.h"
 #include "../include/LSH/LSH.hpp"
 #include "../include/BruteForce/BruteForce.hpp"
 
@@ -16,18 +15,16 @@ int main(int argc, char const *argv[]) {
   interface::Dataset queries;
   interface::IOFiles files;
   interface::input::LSH::LSH_input lsh_input;
-  interface::input::HCUBE::HCUBE_input hcube_input;
+  // interface::input::HCUBE::HCUBE_input hcube_input;
 
+  std::cout << "Hi\n";
 
   /* parse LSH input */
   int ret = interface::input::LSH::LSHParseInput(argc, argv, lsh_input, files, status);
 
-  /* parse hypercube input */
-  int ret2 = interface::input::HCUBE::HCUBEParseInput(argc, argv, hcube_input, files, status);
-
   /* parse dataset */
   int ret3 = interface::ParseDataset(files.input_file, data);
-  
+
   /* parse query set */
   int ret4 = interface::ParseDataset(files.query_file, queries);
 
@@ -35,9 +32,6 @@ int main(int argc, char const *argv[]) {
   /* demonstrate the structs and their fields */
   std::cout << "\nLSH Input:" << "\n\n";
   std::cout << "k = " << +lsh_input.k << ", L = " << +lsh_input.L << ", N = " << lsh_input.N << ", R = " << lsh_input.R << "\n\n";
-
-  std::cout << "\nHCUBE Input:" << "\n\n";
-  std::cout << "k = " << +hcube_input.k << ", M = " << hcube_input.M << ", probes = " << hcube_input.probes << ", N = " << hcube_input.N << ", R = " << hcube_input.R << "\n\n";
 
   std::cout << "\nDataset:" << "\n";
   std::cout << "\nmagic number: " << data.magic_number << "\n# of images: " << data.number_of_images
