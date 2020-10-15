@@ -1,17 +1,22 @@
-LSH: interface_utils.o interface.o LSH_interface.o HCUBE_interface.o main.o
-	g++ object/LSH_interface.o object/HCUBE_interface.o object/interface_utils.o object/interface.o object/main.o -o bin/LSH
+CC=g++
 
-interface_utils.o:
-	g++ -c -o object/interface_utils.o src/interfaces/interface_utils.cpp
+LSH: LSHMain LSH_interface.o interface_utils.o interface.o
+	$(CC) -o bin/LSH object/main.o object/LSH_interface.o object/interface_utils.o object/interface.o
+
+LSHMain:
+	$(CC) -c -o object/main.o exc1/main.cpp
+  
+LSHInterface.o:
+	$(CC) -c -o object/LSHInterface.o src/interfaces/LSH/LSH_interface.cpp
+  
+HCUBE_interface.o:
+	$(CC) -c -o object/HCUBE_interface.o src/interfaces/HCUBE_interface.cpp
 
 interface.o:
-	g++ -c -o object/interface.o src/interfaces/interface.cpp
+	$(CC) -c -o object/interface.o src/interfaces/interface.cpp
 
-LSH_interface.o:
-	g++ -c -o object/LSH_interface.o src/interfaces/LSH_interface.cpp
+interface_utils.o:
+	$(CC) -c -o object/interface_utils.o src/interfaces/interface_utils.cpp
 
-HCUBE_interface.o:
-	g++ -c -o object/HCUBE_interface.o src/interfaces/HCUBE_interface.cpp
-
-main.o:
-	g++ -c -o object/main.o exc1/main.cpp
+clean:
+	rm bin/* object/*.o

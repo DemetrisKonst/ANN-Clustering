@@ -1,11 +1,14 @@
 #include <iostream>
+#include <chrono>
 
 #include "../include/interfaces/LSH_interface.h"
 #include "../include/interfaces/HCUBE_interface.h"
+#include "../include/interfaces/LSH/LSH_interface.h"
+#include "../include/LSH/LSH.hpp"
+#include "../include/BruteForce/BruteForce.hpp"
 
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const *argv[]) {
 
   /* define the variables */
   interface::ExitCode status;
@@ -24,7 +27,7 @@ int main(int argc, char const *argv[])
 
   /* parse dataset */
   int ret3 = interface::ParseDataset(files.input_file, data);
-
+  
   /* parse query set */
   int ret4 = interface::ParseDataset(files.query_file, queries);
 
