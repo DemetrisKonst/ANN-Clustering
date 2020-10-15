@@ -1,6 +1,8 @@
 #include <iostream>
 #include <chrono>
 
+#include "../include/interfaces/LSH_interface.h"
+#include "../include/interfaces/HCUBE_interface.h"
 #include "../include/interfaces/LSH/LSH_interface.h"
 #include "../include/LSH/LSH.hpp"
 #include "../include/BruteForce/BruteForce.hpp"
@@ -8,106 +10,70 @@
 
 int main(int argc, char const *argv[]) {
 
+  /* define the variables */
   interface::ExitCode status;
-
-  interface::input::LSH_input input;
-  interface::input::LSH_dataset dataset;
-
-  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-
-  int ret = interface::input::LSHParseInput(argc, argv, input, status);
-  int ret2 = interface::input::LSHParseDataset(input.input_file, dataset);
-
-  std::cout << dataset.magic_number << "\n";
-
-  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-  std::cout << "Time of Input Parsing = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+  interface::Dataset data;
+  interface::Dataset queries;
+  interface::IOFiles files;
+  interface::input::LSH::LSH_input lsh_input;
+  interface::input::HCUBE::HCUBE_input hcube_input;
 
 
+  /* parse LSH input */
+  int ret = interface::input::LSH::LSHParseInput(argc, argv, lsh_input, files, status);
+
+  /* parse hypercube input */
+  int ret2 = interface::input::HCUBE::HCUBEParseInput(argc, argv, hcube_input, files, status);
+
+  /* parse dataset */
+  int ret3 = interface::ParseDataset(files.input_file, data);
+  
+  /* parse query set */
+  int ret4 = interface::ParseDataset(files.query_file, queries);
 
 
-  begin = std::chrono::steady_clock::now();
+  /* demonstrate the structs and their fields */
+  std::cout << "\nLSH Input:" << "\n\n";
+  std::cout << "k = " << +lsh_input.k << ", L = " << +lsh_input.L << ", N = " << lsh_input.N << ", R = " << lsh_input.R << "\n\n";
 
-  LSH lsh (dataset.number_of_images, 16, dataset.rows_per_image*dataset.columns_per_image, input.k, input.L, input.R, pow(2, 32) - 5, dataset.images);
+  std::cout << "\nHCUBE Input:" << "\n\n";
+  std::cout << "k = " << +hcube_input.k << ", M = " << hcube_input.M << ", probes = " << hcube_input.probes << ", N = " << hcube_input.N << ", R = " << hcube_input.R << "\n\n";
 
-  end = std::chrono::steady_clock::now();
-  std::cout << "Time of LSH Initialization = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
+  std::cout << "\nDataset:" << "\n";
+  std::cout << "\nmagic number: " << data.magic_number << "\n# of images: " << data.number_of_images
+            << "\nrows per image: " << data.rows_per_image << "\ncolumns per image: " << data.columns_per_image << std::endl;
 
-  BruteForce bf (dataset.number_of_images, dataset.rows_per_image*dataset.columns_per_image, dataset.images);
+  uint32_t area = data.rows_per_image * data.columns_per_image;
 
+  for (int image = 0; image < 10; image++)
+  {
+    std::cout << "\nImage: " << image << "\n\n";
+    for (int pixel = 0; pixel < area; pixel++)
+    {
+      std::cout << +data.images[image][pixel] << " ";
+    }
 
-  std::vector<std::pair<int, uint8_t*>> reskNN = lsh.ApproxNN(dataset.images[0], input.N);
-  std::pair<int, uint8_t*> resBF = bf.NearestNeighbor(dataset.images[0]);
-
-  for (int j = 0; j < reskNN.size(); j++){
-    std::cout << "-" << j << " -> " << reskNN[j].first << " -> " << (int)reskNN[j].second[0] << "\n";
+    std::cout << "\n";
   }
-  std::cout << "--BF Distance " << resBF.first << " -> " << (int)resBF.second[0] << "\n";
+  std::cout << "\n";
 
-  std::vector<std::pair<int, uint8_t*>> resRS = lsh.RangeSearch(dataset.images[0], input.R);
+  std::cout << "\nQueryset:" << "\n";
+  std::cout << "\nmagic number: " << queries.magic_number << "\n# of images: " << queries.number_of_images
+            << "\nrows per image: " << queries.rows_per_image << "\ncolumns per image: " << queries.columns_per_image << std::endl;
 
-  for (int j = 0; j < resRS.size(); j++){
-    std::cout << "--" << j << " +> Distance " << resRS[j].first << "\n";
+  uint32_t area_2 = queries.rows_per_image * queries.columns_per_image;
+
+  for (int image = 0; image < 10; image++)
+  {
+    std::cout << "\nImage: " << image << "\n\n";
+    for (int pixel = 0; pixel < area_2; pixel++)
+    {
+      std::cout << +queries.images[image][pixel] << " ";
+    }
+
+    std::cout << "\n";
   }
+  std::cout << "\n";
 
   return 0;
 }
-// =======
-// #include <cmath>
-// #include <random>
-// #include <chrono>
-
-// #include "../include/LSH/LSH.hpp"
-// #include "../include/BruteForce/BruteForce.hpp"
-
-// int main(int argc, char const *argv[]) {
-//   uint8_t** data;
-//   int trainingData = 10000;
-//   int d = 784;
-//   double radius = 60000.0;
-
-//   int testData = 10;
-
-//   uint8_t** tdata;
-
-//   tdata = new uint8_t*[testData];
-//   for (int i = 0; i < testData; i++)
-//     tdata[i] = new uint8_t[d];
-
-
-
-
-//   begin = std::chrono::steady_clock::now();
-
-//   for (int i = 0; i < testData; i++){
-//     std::cout << "\n-------------" << i << "-----------------\n";
-//     std::vector<std::pair<int, uint8_t*>> res = lsh.ApproxNN(tdata[i], 5);
-//     std::pair<int, uint8_t*> resBF = bf.NearestNeighbor(tdata[i]);
-
-//     for (int j = 0; j < res.size(); j++){
-//       std::cout << "-" << j << " -> " << res[j].first << " -> " << (int)res[j].second[0] << "\n";
-//     }
-//     std::cout << "--BF Distance " << resBF.first << " -> " << (int)resBF.second[0] << "\n";
-//   }
-
-//   end = std::chrono::steady_clock::now();
-//   std::cout << "Time difference of kNN = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
-
-
-//   begin = std::chrono::steady_clock::now();
-
-//   for (int i = 0; i < testData; i++){
-//     std::cout << "\n-------------" << i << "-----------------\n";
-//     std::vector<std::pair<int, uint8_t*>> res = lsh.RangeSearch(tdata[i], radius);
-
-//     for (int j = 0; j < res.size(); j++){
-//       std::cout << "--" << j << " +> Distance " << res[j].first << "\n";
-//     }
-//   }
-
-//   end = std::chrono::steady_clock::now();
-//   std::cout << "Time difference of Range Search = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "ms" << std::endl;
-// >>>>>>> main
-
-//   return 0;
-// }
