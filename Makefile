@@ -1,7 +1,13 @@
 CC=g++
 
-LSH: include/LSH/LSHFun.hpp
-	g++ -o bin/LSH exc1/main.cpp
+LSH: LSHMain LSHInterface.o
+	$(CC) -o bin/LSH object/main.o object/LSHInterface.o
+
+LSHMain:
+	$(CC) -c -o object/main.o exc1/main.cpp
+
+LSHInterface.o:
+	$(CC) -c -o object/LSHInterface.o src/interfaces/LSH/LSH_interface.cpp
 
 clean:
-	rm bin/*
+	rm bin/* object/*.o
