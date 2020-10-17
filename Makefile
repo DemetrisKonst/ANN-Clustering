@@ -1,5 +1,14 @@
 CC=g++
 
+HC: HCMain HCInterface.o interface_utils.o interface.o
+	$(CC) -o bin/HC object/HCMain.o object/HCInterface.o object/interface_utils.o object/interface.o
+
+HCMain:
+	$(CC) -c -o object/HCMain.o exc1/HCMain.cpp
+
+HCInterface.o:
+	$(CC) -c -o object/HCInterface.o src/interfaces/HCUBE_interface.cpp
+
 LSH: LSHMain LSHInterface.o interface_utils.o interface.o
 	$(CC) -o bin/LSH object/LSHMain.o object/LSH_interface.o object/interface_utils.o object/interface.o
 
@@ -8,9 +17,6 @@ LSHMain:
 
 LSHInterface.o:
 	$(CC) -c -o object/LSH_interface.o src/interfaces/LSH_interface.cpp
-
-HCUBE_interface.o:
-	$(CC) -c -o object/HCUBE_interface.o src/interfaces/HCUBE_interface.cpp
 
 interface.o:
 	$(CC) -c -o object/interface.o src/interfaces/interface.cpp
