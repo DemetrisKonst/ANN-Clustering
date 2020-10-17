@@ -30,24 +30,24 @@ int main(int argc, char const *argv[]) {
   Hypercube hcmain = Hypercube(data.number_of_images, 4, 28*28, hc_input.R, pow(2,32)-5, data.images);
 
   /* parse query set */
-  // int ret4 = interface::ParseDataset(files.query_file, queries);
+  int ret4 = interface::ParseDataset(files.query_file, queries);
 
-  // for (int i = 0; i < 5; i++) {
-  //   std::vector<std::pair<int, uint8_t*>> kNNRes = lshmain.ApproxNN(queries.images[i], lsh_input.N);
-  //
-  //   std::cout << "----" << i << "----" << '\n';
-  //   for (int j = 0; j < kNNRes.size(); j++) {
-  //     std::cout << j << "th Distance - ApproxNN " << kNNRes[j].first << '\n';
-  //   }
-  //
-  //   std::vector<std::pair<int, uint8_t*>> rsRes = lshmain.RangeSearch(queries.images[i], lsh_input.R);
-  //
-  //   std::cout << "----" << i << "----" << '\n';
-  //   for (int j = 0; j < rsRes.size(); j++) {
-  //     std::cout << j << "th Distance - RangeSearch" << rsRes[j].first << '\n';
-  //   }
-  //
-  // }
+  for (int i = 0; i < 5; i++) {
+    std::vector<std::pair<int, uint8_t*>> kNNRes = hcmain.ApproxNN(queries.images[i], hc_input.N, hc_input.probes, hc_input.M);
+
+    std::cout << "----" << i << "----" << '\n';
+    for (int j = 0; j < kNNRes.size(); j++) {
+      std::cout << j << "th Distance - ApproxNN " << kNNRes[j].first << '\n';
+    }
+
+    std::vector<std::pair<int, uint8_t*>> rsRes = hcmain.RangeSearch(queries.images[i], hc_input.R, hc_input.probes, hc_input.M);
+
+    std::cout << "----" << i << "----" << '\n';
+    for (int j = 0; j < rsRes.size(); j++) {
+      std::cout << j << "th Distance - RangeSearch" << rsRes[j].first << '\n';
+    }
+
+  }
 
   return 0;
 }
