@@ -86,29 +86,51 @@ void interface::output::HCUBEPrintInputFormat(void)
 }
 
 
+void interface::output::clusteringShowInputFormat(void)
+{
+  std::cout << "The input from the command line parameters should be something like this:\n\n"
+            << "$ ./cluster -d <input_file> -c <configuration_file> -o <output_file> [-complete] -m <method>\n\n"
+            << "You can type: $ ./cluster --help, to print this information at any time.\n";
+}
+
+
 void interface::output::PrintErrorMessageAndExit(const interface::ExitCode& code)
 {
+  std::cout << std::endl << std::endl;
   /* print an error according to the code */
   switch (code)
   {
     case NO_INPUT:
     {
-      std::cerr << "ERROR: No input was given by the user."
+      std::cerr << "ERROR: Not enough input was given by the user.\n"
                 << "At least the path of the input file (dataset) has to be provided in the command line parameters.\n";
+      break;
+    }
+    case NO_INPUT_CLUSTERING:
+    {
+      std::cerr << "ERROR: Not enough input was given by the user.\n"
+                << "At least the path of the input file (dataset) and the configuration file have to be provided in the command line parameters.\n";
       break;
     }
     case INVALID_INPUT_LSH:
     {
-      std::cerr << "ERROR: command line arguments cannot be recognized. Input is invalid."
+      std::cerr << "ERROR: command line arguments cannot be recognized. Input is invalid.\n"
                 << "Consult below on how to execute the program.\n";
       output::LSHPrintInputFormat();
       break;
     }
     case INVALID_INPUT_HCUBE:
     {
-      std::cerr << "ERROR: command line arguments cannot be recognized. Input is invalid."
+      std::cerr << "ERROR: command line arguments cannot be recognized. Input is invalid.\n"
                 << "Consult below on how to execute the program.\n";
       output::HCUBEPrintInputFormat();
+      break;
+    }
+    case INVALID_INPUT_CLUSTERING:
+    {
+      std::cerr << "ERROR: command line arguments cannot be recognized. Input is invalid.\n"
+                << "Consult below on how to execute the program.\n";
+      output::clusteringShowInputFormat();
       break;
     }
     case HELP_MSG_LSH:
@@ -121,10 +143,21 @@ void interface::output::PrintErrorMessageAndExit(const interface::ExitCode& code
       output::HCUBEPrintInputFormat();
       break;
     }
+    case HELP_MSG_CLUSTERING:
+    {
+      output::clusteringShowInputFormat();
+      break;
+    }
     case INVALID_K:
     {
-      std::cerr << "ERROR: The value passed for the number of hash functions k is invalid."
+      std::cerr << "ERROR: The value passed for the number of hash functions k is invalid.\n"
                 << "Usually k is a positive int from 4 to 6 (but can range from 1 to 31).\n";
+      break;
+    }
+    case INVALID_K_DIM:
+    {
+      std::cerr << "ERROR: The value passed for the dimension of the Hypercube (k = d') is invalid.\n"
+                << "It should be a positive in between 0-255.\n";
       break;
     }
     case INVALID_L:
@@ -157,6 +190,22 @@ void interface::output::PrintErrorMessageAndExit(const interface::ExitCode& code
                 << "It should be a positive double.\n";
       break;
     }
+    case INVALID_CLUSTERING_METHOD:
+    {
+      std::cerr << "ERROR: The clustering method given is invalid.\nThe available clustering methods are: Classic, LSH, Hypercube.\n";
+      break;
+    }
+    case CONFIG_INVALID_CLUSTERS:
+    {
+      std::cerr << "ERROR: The value of the number of clusters K is invalid.\nIt should be a positive integer, smaller than 256.\n";
+      break;
+    }
+    case CONFIG_NO_CLUSTERS:
+    {
+      std::cerr << "ERROR: In the configuration file, the first line should contain the number od clusters K.\n"
+                << "It should be a positive value.\n";
+      break;
+    }
     case INVALID_INFILE_PATH:
     {
       std::cerr << "ERROR: The path passed for the input file (dataset) is invalid.\n";
@@ -172,6 +221,11 @@ void interface::output::PrintErrorMessageAndExit(const interface::ExitCode& code
       std::cerr << "ERROR: The path passed for the output file is invalid.\n";
       break;
     }
+    case INVALID_CONFIG_PATH:
+    {
+      std::cerr << "ERROR: The path passed for the configuration file is invalid.\n";
+      break;
+    }
     default:
     {
       std::cerr << "ERROR: LSH_interface::Whoops this shouldn't have happened. ELOUSA.\n";
@@ -179,5 +233,6 @@ void interface::output::PrintErrorMessageAndExit(const interface::ExitCode& code
     }
   }
 
+  std::cout << std::endl << std::endl;
   exit(EXIT_FAILURE);
 }

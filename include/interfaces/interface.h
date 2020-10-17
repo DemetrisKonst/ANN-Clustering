@@ -12,13 +12,21 @@
 namespace interface
 {
 
-  /* struct used to move around the IO values */
+  /* struct used to group the IO (input - output) values */
   typedef struct IOFiles
   {
     std::string input_file = "";
     std::string query_file = "";
     std::string output_file = "";
   } IOFiles;
+
+  /* struct used to group the IOC (input - output - configuration) values */
+  typedef struct IOCFiles
+  {
+    std::string input_file = "";
+    std::string configuration_file = "";
+    std::string output_file = "";
+  } IOCFiles;
 
   /* struct used to define the contents of a dataset */
   typedef struct Dataset

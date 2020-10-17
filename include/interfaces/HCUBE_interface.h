@@ -22,7 +22,7 @@ namespace interface
       {
         uint8_t k = 4;
         uint32_t M = 10;
-        uint32_t probes = 2;
+        uint16_t probes = 2;
         uint32_t N = 1;
         double R = 1.0;
       } LSH_input;

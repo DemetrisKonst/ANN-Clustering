@@ -66,9 +66,9 @@ int interface::input::HCUBE::HCUBEParseInput(const int& argc, const char* argv[]
     else if (option == "-k")
     {
       int value_as_int = stoi(value);
-      if (value_as_int <= 0 || value_as_int >= 32)
+      if (value_as_int <= 0 || value_as_int >= 256)
       {
-        status = INVALID_K;
+        status = INVALID_K_DIM;
         return 0;
       }
       input.k = value_as_int;
