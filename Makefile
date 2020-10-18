@@ -1,25 +1,22 @@
 CC=g++
 
-# LSH: LSHMain LSHInterface.o interface_utils.o interface.o
-# 	$(CC) -o bin/LSH object/LSHMain.o object/LSH_interface.o object/interface_utils.o object/interface.o
-#
-# LSHMain:
-# 	$(CC) -c -o object/LSHMain.o exc1/LSHMain.cpp
-#
-# LSHInterface.o:
-# 	$(CC) -c -o object/LSH_interface.o src/interfaces/LSH_interface.cpp
-#
-# HCUBE_interface.o:
-# 	$(CC) -c -o object/HCUBE_interface.o src/interfaces/HCUBE_interface.cpp
+HC: HCMain HCInterface.o interface_utils.o interface.o
+	$(CC) -o bin/HC object/HCMain.o object/HCInterface.o object/interface_utils.o object/interface.o
 
-CLUSTER: ClusterMain clusteringInterface.o interface_utils.o interface.o
-	$(CC) -o bin/cluster object/ClusterMain.o object/clustering_interface.o object/interface_utils.o object/interface.o
+HCMain:
+	$(CC) -c -o object/HCMain.o exc1/HCMain.cpp
 
-ClusterMain:
-	$(CC) -c -o object/ClusterMain.o exc2/ClusterMain.cpp
+HCInterface.o:
+	$(CC) -c -o object/HCInterface.o src/interfaces/HCUBE_interface.cpp
 
-clusteringInterface.o:
-	$(CC) -c -o object/clustering_interface.o src/interfaces/clustering_interface.cpp
+LSH: LSHMain LSHInterface.o interface_utils.o interface.o
+	$(CC) -o bin/LSH object/LSHMain.o object/LSH_interface.o object/interface_utils.o object/interface.o
+
+LSHMain:
+	$(CC) -c -o object/LSHMain.o exc1/LSHMain.cpp
+
+LSHInterface.o:
+	$(CC) -c -o object/LSH_interface.o src/interfaces/LSH_interface.cpp
 
 interface.o:
 	$(CC) -c -o object/interface.o src/interfaces/interface.cpp
