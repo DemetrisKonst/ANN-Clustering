@@ -109,7 +109,7 @@ void interface::output::PrintErrorMessageAndExit(const interface::ExitCode& code
     case NO_INPUT_CLUSTERING:
     {
       std::cerr << "ERROR: Not enough input was given by the user.\n"
-                << "At least the path of the input file (dataset) and the configuration file have to be provided in the command line parameters.\n";
+                << "At least the path of the input file (dataset), the path of the configuration file and the Clustering method have to be provided in the command line parameters.\n";
       break;
     }
     case INVALID_INPUT_LSH:

@@ -36,9 +36,10 @@ int interface::input::clustering::clusteringParseInput(const int& argc, const ch
   }
 
 
-  /* keep flags to make sure that the input file (dataset) and the configuration files are provided */
+  /* keep flags to make sure that the input file (dataset), the configuration file and the clustering method are provided */
   bool flag_input_file = false;
   bool flag_config_file = false;
+  bool flag_method = false;
 
   /* iterate through the arguments to find the values */
   int i = 1;
@@ -105,6 +106,7 @@ int interface::input::clustering::clusteringParseInput(const int& argc, const ch
         status = INVALID_CLUSTERING_METHOD;
         return 0;
       }
+      flag_method = true;
       input.algorithm = value;
       i++;
     }
@@ -113,7 +115,7 @@ int interface::input::clustering::clusteringParseInput(const int& argc, const ch
   }
 
   /* check if the input file (dataset) was not given */
-  if (flag_input_file == false || flag_config_file == false)
+  if (!flag_input_file || !flag_config_file || !flag_method)
   {
     status = NO_INPUT_CLUSTERING;
     return 0;

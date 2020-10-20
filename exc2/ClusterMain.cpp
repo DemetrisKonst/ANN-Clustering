@@ -25,8 +25,8 @@ int main(int argc, char const *argv[]) {
     interface::output::PrintErrorMessageAndExit(status);
   }
 
-  // /* parse dataset */
-  // int ret3 = interface::ParseDataset(files.input_file, data);
+  /* parse dataset */
+  int ret3 = interface::ParseDataset(files.input_file, data);
 
   /* show input */
   std::cout << "complete: " << cluster_input.complete << ", method: " << cluster_input.algorithm << std::endl;
