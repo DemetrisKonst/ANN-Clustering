@@ -117,6 +117,21 @@ int interface::ParseDataset(const std::string& filename, interface::Dataset& dat
     }
   }
 
-  /* everything is done, return */
+  /* everything is done, close the file and return */
+  input_file.close();
   return 1;
+}
+
+
+void interface::freeDataset(interface::Dataset& dataset)
+{
+  /* free the data points one-by-one */
+  for (int i = 0; i < dataset.number_of_images; i++)
+  {
+    delete[] dataset.images[i];
+  }
+
+  /* free the array used for the images */
+  delete[] dataset.images;
+  dataset.images = NULL;
 }

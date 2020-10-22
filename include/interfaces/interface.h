@@ -1,5 +1,5 @@
-#ifndef __INTERFACE__
-#define __INTERFACE__
+#ifndef _INTERFACE
+#define _INTERFACE
 
 
 #include <cstdlib>
@@ -44,6 +44,10 @@ namespace interface
 
   /* function used to read input from the dataset */
   int ParseDataset(const std::string& filename, Dataset& dataset);
+
+  /* function to free up the memory that the dataset used */
+  void freeDataset(Dataset& dataset);
+
 }
 
 

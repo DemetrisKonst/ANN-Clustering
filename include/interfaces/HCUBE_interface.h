@@ -1,5 +1,5 @@
-#ifndef __HCUBE_INTERFACE__
-#define __HCUBE_INTERFACE__
+#ifndef _HCUBE_INTERFACE
+#define _HCUBE_INTERFACE
 
 #include <cstdlib>
 #include <cstdint>

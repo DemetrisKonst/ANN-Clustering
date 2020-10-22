@@ -1,5 +1,5 @@
-#ifndef __INTERFACE_UTILS__
-#define __INTERFACE_UTILS__
+#ifndef _INTERFACE_UTILS
+#define _INTERFACE_UTILS
 
 
 /* namespace regarding interface utilities */

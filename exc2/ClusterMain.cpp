@@ -2,6 +2,7 @@
 #include <chrono>
 
 #include "../include/interfaces/clustering_interface.h"
+#include "../include/Clustering/clustering.hpp"
 
 
 int main(int argc, char const *argv[]) {
@@ -34,5 +35,10 @@ int main(int argc, char const *argv[]) {
             << ", HC_M = " << cluster_config.HC_M << ", HC_k = " << +cluster_config.HC_k << ", HC_probes = " << cluster_config.HC_probes << "\n\n";
 
 
+  clustering::Clustering<uint8_t> cluster(cluster_config, data);
+
+
+  /* free up the allocated space and return */
+  interface::freeDataset(data);
   return 0;
 }
