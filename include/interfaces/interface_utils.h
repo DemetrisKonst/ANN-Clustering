@@ -49,6 +49,9 @@ namespace interface
   /* namespace regarding output with the user */
   namespace output
   {
+    /* function that prints (in a not-so-nice way) an image in the console */
+    void printImage(const uint8_t* image_vector, const uint16_t& rows, const uint16_t& columns);
+
     /* function that shows how an LSH input should be formed */
     void LSHPrintInputFormat(void);
 

@@ -36,6 +36,28 @@ int main(int argc, char const *argv[]) {
 
 
   clustering::Clustering<uint8_t> cluster(cluster_config, data);
+  cluster.perform_clustering(data, "Classic");
+
+  clustering::ClusterCenter<uint8_t>** centers = cluster.get_centers();
+
+  /* print images from center 0 */
+  for (int i = 0; i < 10; i++)
+  {
+    std::cout << "Image: " << i << "\n\n";
+    uint32_t index = centers[0]->vectors_in_cluster[0][i];
+    interface::output::printImage(data.images[index], data.rows_per_image, data.columns_per_image);
+    std::cout << "\n\n";
+  }
+
+
+
+  // /* print some images */
+  // for (int i = 0; i < 10; i++)
+  // {
+  //   std::cout << "Image: " << i << "\n\n";
+  //   interface::output::printImage(data.images[i], data.rows_per_image, data.columns_per_image);
+  //   std::cout << "\n\n";
+  // }
 
 
   /* free up the allocated space and return */
