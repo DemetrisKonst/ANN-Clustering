@@ -30,18 +30,18 @@ int main(int argc, char const *argv[]) {
   int ret4 = interface::ParseDataset(files.query_file, queries);
 
   for (int i = 0; i < 5; i++) {
-    std::vector<std::pair<int, Item<uint8_t>>> kNNRes = lshmain.ApproxNN(queries.images[i], lsh_input.N);
+    std::vector<std::pair<int, Item<uint8_t>*>> kNNRes = lshmain.ApproxNN(queries.images[i], lsh_input.N);
 
     std::cout << "----" << i << "----" << '\n';
     for (int j = 0; j < kNNRes.size(); j++) {
-      std::cout << j << "th Distance - ApproxNN " << kNNRes[j].first << ", Item -> " << kNNRes[j].second.id << '\n';
+      std::cout << j << "th Distance - ApproxNN " << kNNRes[j].first << ", Item -> " << kNNRes[j].second->id << '\n';
     }
 
-    std::vector<std::pair<int, Item<uint8_t>>> rsRes = lshmain.RangeSearch(queries.images[i], lsh_input.R);
+    std::vector<std::pair<int, Item<uint8_t>*>> rsRes = lshmain.RangeSearch(queries.images[i], lsh_input.R);
 
     std::cout << "----" << i << "----" << '\n';
     for (int j = 0; j < rsRes.size(); j++) {
-      std::cout << j << "th Distance - RangeSearch" << rsRes[j].first  << ", Item -> " << kNNRes[j].second.id << '\n';
+      std::cout << j << "th Distance - RangeSearch" << rsRes[j].first  << ", Item -> " << kNNRes[j].second->id << '\n';
     }
 
   }

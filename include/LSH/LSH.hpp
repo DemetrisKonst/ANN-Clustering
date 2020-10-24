@@ -8,7 +8,7 @@
 #include "../metrics/metrics.hpp"
 
 template <typename T>
-bool comparePairs (std::pair<int, Item<T>> x, std::pair<int, Item<T>> y) {
+bool comparePairs (std::pair<int, Item<T>*> x, std::pair<int, Item<T>*> y) {
   return (x.first < y.first);
 }
 
@@ -23,16 +23,16 @@ private:
   double r;      //search radius
   unsigned long int m;
 
-  std::vector<Item<T>>** H;
+  std::vector<Item<T>*>** H;
   AmplifiedHashFunction<T>** g;
 
 public:
-  LSH (int n, int div, int d, int k, int l, double r, unsigned long int m, T** data):
+  LSH (int n, int div, int d, int k, int l, double r, unsigned long int m, Item<T>** items):
   n(n), D(d), k(k), L(l), r(r), m(m) {
     htSize = n/div;
 
     g = new AmplifiedHashFunction<T>*[L];
-    H = new std::vector<Item<T>>*[L];
+    H = new std::vector<Item<T>*>*[L];
 
     int* mmod = new int[D];
     for (int b = 0; b < D; b++)
@@ -42,7 +42,7 @@ public:
     for (int i = 0; i < L; i++) {
       g[i] = new AmplifiedHashFunction<T>(r, 4, k, d, pow(2, 32) - 5, mmod);
 
-      H[i] = new std::vector<Item<T>>[htSize];
+      H[i] = new std::vector<Item<T>*>[htSize];
       for (int j = 0; j < htSize; j++) {
         std::vector<Item<T>> tmpVec;
         H[i][j] = tmpVec;
@@ -51,9 +51,8 @@ public:
 
     for (int a = 0; a < n; a++) {
       for (int i = 0; i < L; i++) {
-        unsigned long int gres = g[i]->HashVector(data[a]);
-        Item<T> tmpItem(a, D, data[a]);
-        H[i][gres%htSize].push_back(tmpItem);
+        unsigned long int gres = g[i]->HashVector(items[a]->data);
+        H[i][gres%htSize].push_back(items[a]);
       }
 
       if ((a+1)%10000 == 0)
@@ -61,11 +60,11 @@ public:
     }
   }
 
-  std::vector<std::pair<int, Item<T>>> ApproxNN (T* query, int N, int thresh = 0) {
-    std::vector<std::pair<int, Item<T>>> d;
+  std::vector<std::pair<int, Item<T>*>> ApproxNN (T* query, int N, int thresh = 0) {
+    std::vector<std::pair<int, Item<T>*>> d;
 
     for (int i = 0; i < N; i++)
-      d.push_back(std::make_pair(std::numeric_limits<int>::max(), Item<T>()));
+      d.push_back(std::make_pair(std::numeric_limits<int>::max(), new Item<T>()));
 
     int itemsSearched = 0;
     for (int i = 0; i < L; i++) {
@@ -74,13 +73,13 @@ public:
       for (int j = 0; j < H[i][bucket].size(); j++) {
         bool alreadyExists = false;
         for (int k = 0; k < N; k++)
-          if (d[k].second == H[i][bucket][j])
+          if (d[k].second->id == H[i][bucket][j]->id)
             alreadyExists = true;
 
         if (alreadyExists)
-          break;
+          continue;
 
-        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j].data, D);
+        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j]->data, D);
 
         if (distance < d[N-1].first) {
           d[N-1].first = distance;
@@ -96,8 +95,8 @@ public:
     return d;
   }
 
-  std::vector<std::pair<int, Item<T>>> RangeSearch (T* query, double radius, int thresh = 0) {
-    std::vector<std::pair<int, Item<T>>> d;
+  std::vector<std::pair<int, Item<T>*>> RangeSearch (T* query, double radius, int thresh = 0) {
+    std::vector<std::pair<int, Item<T>*>> d;
 
     int itemsSearched = 0;
     for (int i = 0; i < L; i++) {
@@ -106,16 +105,16 @@ public:
       for (int j = 0; j < H[i][bucket].size(); j++) {
         bool alreadyExists = false;
         for (int k = 0; k < d.size(); k++)
-          if (d[k].second == H[i][bucket][j])
+          if (d[k].second->id == H[i][bucket][j]->id)
             alreadyExists = true;
 
-        if (alreadyExists)
-          break;
+        if (alreadyExists || H[i][bucket][j]->marked)
+          continue;
 
-        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j].data, D);
+        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j]->data, D);
 
         if (distance < radius) {
-          std::pair<int, Item<T>> tmpPair = std::make_pair(distance, H[i][bucket][j]);
+          std::pair<int, Item<T>*> tmpPair = std::make_pair(distance, H[i][bucket][j]);
           d.push_back(tmpPair);
         }
 
