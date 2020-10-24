@@ -6,6 +6,7 @@
 #include <cstdint>
 
 #include "interface_utils.h"
+#include "../core/item.hpp"
 
 
 /* namespace regarding interface utilities */
@@ -37,6 +38,30 @@ namespace interface
     uint32_t columns_per_image = 0;
     uint8_t** images = NULL;
   } Dataset;
+
+
+  /* struct used to move around the Dataset */
+  template <typename T>
+  struct Data
+  {
+    uint32_t n = 0;
+    uint16_t dimension = 0;
+    Item<T>** items = NULL;
+
+    Data<T>(Dataset& dataset)
+    {
+      /* initialize the values of the Data */
+      n = dataset.number_of_images;
+      dimension = dataset.rows_per_image * dataset.columns_per_image;
+      items = new Item<T>*[n];
+
+      /* create each item separately */
+      for (int i = 0; i < n; i++)
+      {
+        items[i] = new Item<T>(i, dataset.images[i], false, false);
+      }
+    }
+  };
 
 
   /* function used to scan the query and output files, in case they were not passed as command line parameters */

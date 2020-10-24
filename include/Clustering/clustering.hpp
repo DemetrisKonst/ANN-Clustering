@@ -52,7 +52,7 @@ namespace clustering
       {
         case metrics::MANHATTAN:
         {
-          distance = metrics::ManhattanDistanceTmp(components, p, dimension);
+          distance = metrics::ManhattanDistance(components, p, dimension);
           break;
         }
         case metrics::EUCLIDEAN:
