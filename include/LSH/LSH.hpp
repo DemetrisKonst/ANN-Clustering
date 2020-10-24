@@ -3,11 +3,12 @@
 #include <algorithm>
 #include <limits>
 
+#include "../core/item.hpp"
 #include "LSHFun.hpp"
 #include "../metrics/metrics.hpp"
 
 template <typename T>
-bool comparePairs (std::pair<int, T*> x, std::pair<int, T*> y) {
+bool comparePairs (std::pair<int, Item<T>> x, std::pair<int, Item<T>> y) {
   return (x.first < y.first);
 }
 
@@ -22,7 +23,7 @@ private:
   double r;      //search radius
   unsigned long int m;
 
-  std::vector<T*>** H;
+  std::vector<Item<T>>** H;
   AmplifiedHashFunction<T>** g;
 
 public:
@@ -31,7 +32,7 @@ public:
     htSize = n/div;
 
     g = new AmplifiedHashFunction<T>*[L];
-    H = new std::vector<T*>*[L];
+    H = new std::vector<Item<T>>*[L];
 
     int* mmod = new int[D];
     for (int b = 0; b < D; b++)
@@ -41,9 +42,9 @@ public:
     for (int i = 0; i < L; i++) {
       g[i] = new AmplifiedHashFunction<T>(r, 4, k, d, pow(2, 32) - 5, mmod);
 
-      H[i] = new std::vector<T*>[htSize];
+      H[i] = new std::vector<Item<T>>[htSize];
       for (int j = 0; j < htSize; j++) {
-        std::vector<T*> tmpVec;
+        std::vector<Item<T>> tmpVec;
         H[i][j] = tmpVec;
       }
     }
@@ -51,7 +52,8 @@ public:
     for (int a = 0; a < n; a++) {
       for (int i = 0; i < L; i++) {
         unsigned long int gres = g[i]->HashVector(data[a]);
-        H[i][gres%htSize].push_back(data[a]);
+        Item<T> tmpItem(a, D, data[a]);
+        H[i][gres%htSize].push_back(tmpItem);
       }
 
       if ((a+1)%10000 == 0)
@@ -59,11 +61,11 @@ public:
     }
   }
 
-  std::vector<std::pair<int, T*>> ApproxNN (T* query, int N, int thresh = 0) {
-    std::vector<std::pair<int, T*>> d;
+  std::vector<std::pair<int, Item<T>>> ApproxNN (T* query, int N, int thresh = 0) {
+    std::vector<std::pair<int, Item<T>>> d;
 
     for (int i = 0; i < N; i++)
-      d.push_back(std::make_pair(std::numeric_limits<int>::max(), (T*) NULL));
+      d.push_back(std::make_pair(std::numeric_limits<int>::max(), Item<T>()));
 
     int itemsSearched = 0;
     for (int i = 0; i < L; i++) {
@@ -78,7 +80,7 @@ public:
         if (alreadyExists)
           break;
 
-        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j], D);
+        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j].data, D);
 
         if (distance < d[N-1].first) {
           d[N-1].first = distance;
@@ -94,8 +96,8 @@ public:
     return d;
   }
 
-  std::vector<std::pair<int, T*>> RangeSearch (T* query, double radius, int thresh = 0) {
-    std::vector<std::pair<int, T*>> d;
+  std::vector<std::pair<int, Item<T>>> RangeSearch (T* query, double radius, int thresh = 0) {
+    std::vector<std::pair<int, Item<T>>> d;
 
     int itemsSearched = 0;
     for (int i = 0; i < L; i++) {
@@ -110,10 +112,10 @@ public:
         if (alreadyExists)
           break;
 
-        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j], D);
+        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j].data, D);
 
         if (distance < radius) {
-          std::pair<int, T*> tmpPair = std::make_pair(distance, H[i][bucket][j]);
+          std::pair<int, Item<T>> tmpPair = std::make_pair(distance, H[i][bucket][j]);
           d.push_back(tmpPair);
         }
 
