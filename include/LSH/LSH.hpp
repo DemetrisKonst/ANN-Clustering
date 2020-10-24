@@ -59,12 +59,13 @@ public:
     }
   }
 
-  std::vector<std::pair<int, T*>> ApproxNN (T* query, int N) {
+  std::vector<std::pair<int, T*>> ApproxNN (T* query, int N, int thresh) {
     std::vector<std::pair<int, T*>> d;
 
     for (int i = 0; i < N; i++)
       d.push_back(std::make_pair(std::numeric_limits<int>::max(), (T*) NULL));
 
+    int itemsSearched = 0;
     for (int i = 0; i < L; i++) {
       int bucket = g[i]->HashVector(query)%htSize;
 
@@ -84,15 +85,19 @@ public:
           d[N-1].second = H[i][bucket][j];
           std::sort(d.begin(), d.end(), comparePairs<T>);
         }
+
+        if (++itemsSearched >= thresh)
+          return d;
       }
     }
 
     return d;
   }
 
-  std::vector<std::pair<int, T*>> RangeSearch (T* query, double radius) {
+  std::vector<std::pair<int, T*>> RangeSearch (T* query, double radius, int thresh) {
     std::vector<std::pair<int, T*>> d;
 
+    int itemsSearched = 0;
     for (int i = 0; i < L; i++) {
       int bucket = g[i]->HashVector(query)%htSize;
 
@@ -111,6 +116,9 @@ public:
           std::pair<int, T*> tmpPair = std::make_pair(distance, H[i][bucket][j]);
           d.push_back(tmpPair);
         }
+
+        if (++itemsSearched >= thresh)
+          return d;
       }
     }
 

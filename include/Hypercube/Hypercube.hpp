@@ -102,7 +102,7 @@ public:
     int vertex = calculateVertex(query);
     std::vector<std::vector<T*>> avProbes = getAvailableProbes(probes, vertex);
 
-    int imagesSearched = 0;
+    int itemsSearched = 0;
     for (int i = 0; i < avProbes.size(); i++) {
       for (int j = 0; j < avProbes[i].size(); j++) {
         int distance = metrics::ManhattanDistance<T>(query, avProbes[i][j], datadim);
@@ -113,12 +113,12 @@ public:
           std::sort(d.begin(), d.end(), comparePairs<T>);
         }
 
-        if (++imagesSearched == thresh)
+        if (++itemsSearched >= thresh)
           return d;
       }
     }
 
-    std::cout << "Images Searched: " << imagesSearched << '\n';
+    std::cout << "Images Searched: " << itemsSearched << '\n';
     return d;
   }
 
@@ -128,7 +128,7 @@ public:
     int vertex = calculateVertex(query);
     std::vector<std::vector<T*>> avProbes = getAvailableProbes(probes, vertex);
 
-    int imagesSearched = 0;
+    int itemsSearched = 0;
 
     for (int i = 0; i < avProbes.size(); i++) {
       for (int j = 0; j < avProbes[i].size(); j++) {
@@ -139,12 +139,12 @@ public:
           d.push_back(tmpPair);
         }
 
-        if (++imagesSearched == thresh)
+        if (++itemsSearched >= thresh)
           return d;
       }
     }
 
-    std::cout << "Images Searched: " << imagesSearched << '\n';
+    std::cout << "Images Searched: " << itemsSearched << '\n';
     return d;
   }
 };
