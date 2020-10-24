@@ -22,8 +22,14 @@ private:
 
   std::vector<Item<T>*>* H;
 public:
-  Hypercube(int n, int hcd, int dd, double sr, unsigned long int m, Item<T>** items):
-  n(n), HCdim(hcd), datadim(dd), searchRadius(sr), m(m){
+  Hypercube(HCInput* hci, Data* ds) {
+    HCdim = hci->k;
+    searchRadius = hci->R;
+    n = ds->n;
+    datadim = ds->d;
+    Item<T>** items = ds->items;
+    m = pow(2, 32) - 5;
+
     int vertexCount = pow(2, HCdim);
 
     H = new std::vector<Item<T>*>[vertexCount];

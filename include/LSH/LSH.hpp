@@ -27,8 +27,15 @@ private:
   AmplifiedHashFunction<T>** g;
 
 public:
-  LSH (int n, int div, int d, int k, int l, double r, unsigned long int m, Item<T>** items):
-  n(n), D(d), k(k), L(l), r(r), m(m) {
+  LSH (LSHInput* lshi, Data* ds) {
+    k = lshi->k;
+    L = lshi->L;
+    r = lshi->R;
+    n = ds->n;
+    D = ds->d;
+    Item<T>** items = ds->items;
+    m = pow(2, 32) - 5;
+
     htSize = n/div;
 
     g = new AmplifiedHashFunction<T>*[L];
