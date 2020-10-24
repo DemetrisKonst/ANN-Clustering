@@ -1,10 +1,11 @@
 #include <unordered_map>
 
+#include "../core/item.hpp"
 #include "../LSH/LSHFun.hpp"
 #include "../metrics/metrics.hpp"
 
 template <typename T>
-bool comparePairs (std::pair<int, T*> x, std::pair<int, T*> y) {
+bool comparePairs (std::pair<int, Item<T>> x, std::pair<int, Item<T>> y) {
   return (x.first < y.first);
 }
 
@@ -19,16 +20,16 @@ private:
 
   std::vector<HashFunction<T>> LSHFun;
 
-  std::vector<T*>* H;
+  std::vector<Item<T>>* H;
 public:
   Hypercube(int n, int hcd, int dd, double sr, unsigned long int m, T** data):
   n(n), HCdim(hcd), datadim(dd), searchRadius(sr), m(m){
     int vertexCount = pow(2, HCdim);
 
-    H = new std::vector<T*>[vertexCount];
+    H = new std::vector<Item<T>>[vertexCount];
 
     for (int i = 0; i < vertexCount; i++) {
-      std::vector<T*> tmpVec;
+      std::vector<Item<T>> tmpVec;
       H[i] = tmpVec;
     }
 
@@ -38,7 +39,8 @@ public:
 
     for (int i = 0; i < n; i++) {
       int vertex = calculateVertex(data[i]);
-      H[vertex].push_back(data[i]);
+      Item<T> tmpItem(i, datadim, data[i]);
+      H[vertex].push_back(tmpItem);
 
       if ((i+1)%10000 == 0)
         std::cout << i+1 << " items..." << '\n';
@@ -74,8 +76,8 @@ public:
     return vec;
   }
 
-  std::vector<std::vector<T*>> getAvailableProbes (int probes, int startingVertex) {
-    std::vector<std::vector<T*>> probeVec;
+  std::vector<std::vector<Item<T>>> getAvailableProbes (int probes, int startingVertex) {
+    std::vector<std::vector<Item<T>>> probeVec;
 
     for (int i = 0; i < HCdim; i++) {
       std::vector<int> pph = getProbesPerHD(i, startingVertex);
@@ -93,19 +95,19 @@ public:
     return probeVec;
   }
 
-  std::vector<std::pair<int, T*>> ApproxNN (T* query, int N, int probes, int thresh) {
-    std::vector<std::pair<int, T*>> d;
+  std::vector<std::pair<int, Item<T>>> ApproxNN (T* query, int N, int probes, int thresh) {
+    std::vector<std::pair<int, Item<T>>> d;
 
     for (int i = 0; i < N; i++)
-      d.push_back(std::make_pair(std::numeric_limits<int>::max(), (T*) NULL));
+      d.push_back(std::make_pair(std::numeric_limits<int>::max(), Item<T>()));
 
     int vertex = calculateVertex(query);
-    std::vector<std::vector<T*>> avProbes = getAvailableProbes(probes, vertex);
+    std::vector<std::vector<Item<T>>> avProbes = getAvailableProbes(probes, vertex);
 
     int itemsSearched = 0;
     for (int i = 0; i < avProbes.size(); i++) {
       for (int j = 0; j < avProbes[i].size(); j++) {
-        int distance = metrics::ManhattanDistance<T>(query, avProbes[i][j], datadim);
+        int distance = metrics::ManhattanDistance<T>(query, avProbes[i][j].data, datadim);
 
         if (distance < d[N-1].first) {
           d[N-1].first = distance;
@@ -118,24 +120,22 @@ public:
       }
     }
 
-    std::cout << "Images Searched: " << itemsSearched << '\n';
     return d;
   }
 
-  std::vector<std::pair<int, T*>> RangeSearch (T* query, double radius, int probes, int thresh) {
-    std::vector<std::pair<int, T*>> d;
+  std::vector<std::pair<int, Item<T>>> RangeSearch (T* query, double radius, int probes, int thresh) {
+    std::vector<std::pair<int, Item<T>>> d;
 
     int vertex = calculateVertex(query);
-    std::vector<std::vector<T*>> avProbes = getAvailableProbes(probes, vertex);
+    std::vector<std::vector<Item<T>>> avProbes = getAvailableProbes(probes, vertex);
 
     int itemsSearched = 0;
-
     for (int i = 0; i < avProbes.size(); i++) {
       for (int j = 0; j < avProbes[i].size(); j++) {
-        int distance = metrics::ManhattanDistance<T>(query, avProbes[i][j], datadim);
+        int distance = metrics::ManhattanDistance<T>(query, avProbes[i][j].data, datadim);
 
         if (distance < radius) {
-          std::pair<int, T*> tmpPair = std::make_pair(distance, avProbes[i][j]);
+          std::pair<int, Item<T>> tmpPair = std::make_pair(distance, avProbes[i][j]);
           d.push_back(tmpPair);
         }
 
@@ -144,7 +144,6 @@ public:
       }
     }
 
-    std::cout << "Images Searched: " << itemsSearched << '\n';
     return d;
   }
 };
