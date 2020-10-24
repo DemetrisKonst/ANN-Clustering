@@ -5,9 +5,7 @@
 /* namespace regarding the different metrics utilities */
 namespace metrics {
 
-  /* Enum that depicts all the availabe metrics for implementation */
-  typedef enum Metric
-  {
+  typedef enum Metric{
     MANHATTAN,
     EUCLIDEAN,
     MAX,
@@ -17,13 +15,11 @@ namespace metrics {
 
   /* function that computes the Manhattan Distance between 2 points of dimension d */
   template <typename T>
-  double ManhattanDistanceTmp(T* p, T* q, const uint16_t& d)
-  {
-    double sum = 0.0;
-    for (int i = 0; i < d; i++)
-    {
-      sum += abs(p[i] - q[i]);
-    }
+  int ManhattanDistance (T* x, T* y, int length) {
+    int sum = 0;
+
+    for (int i = 0; i < length; i++)
+      sum += abs(x[i]-y[i]);
 
     return sum;
   }
@@ -76,16 +72,6 @@ namespace metrics {
     }
 
     return norm;
-  }
-
-
-  int ManhattanDistance (uint8_t* x, uint8_t* y) {
-    int sum = 0;
-
-    for (int i = 0; i < 784; i++)
-      sum += abs(x[i]-y[i]);
-
-    return sum;
   }
 
   int HammingdDistance (int x, int y) {
