@@ -9,6 +9,8 @@ struct Item {
   // Actual data
   T* data;
   // Flag for reverse assignment
+  bool staged;
+  // Flag for reverse assignment
   bool marked;
   // Flag if is NULL
   bool null;
@@ -17,11 +19,12 @@ struct Item {
     id = -1;
     D = -1;
     data = NULL;
+    staged = false;
     marked = false;
     null = true;
   }
 
-  Item (long int id, int d, T* data, bool md = false) : id(id), D(d), data(data), marked(md) {
+  Item (long int id, int d, T* data, bool st = false, bool md = false) : id(id), D(d), data(data), staged(st), marked(md) {
     null = false;
   }
 
@@ -29,6 +32,8 @@ struct Item {
     id = item.id;
     D = item.D;
     data = item.data;
+    staged = item.staged;
+    marked = item.marked;
   }
 
   bool operator == (const Item<T> &item) {
