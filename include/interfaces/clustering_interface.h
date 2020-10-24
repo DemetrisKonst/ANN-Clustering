@@ -1,5 +1,5 @@
-#ifndef __CLUSTERING_INTERFACE__
-#define __CLUSTERING_INTERFACE__
+#ifndef _CLUSTERING_INTERFACE
+#define _CLUSTERING_INTERFACE
 
 #include "interface.h"
 

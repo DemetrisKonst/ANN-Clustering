@@ -68,6 +68,23 @@ void interface::GetValidFilename(std::string& filename, const std::string& type,
 }
 
 
+void interface::output::printImage(const uint8_t* image_vector, const uint16_t& rows, const uint16_t& columns)
+{
+  /* for every row of the image */
+  for (int row = 0; row < rows; row++)
+  {
+    /* for every column of the image */
+    for (int column = 0; column < columns; column++)
+    {
+      /* print the image */
+      printf("%3u ", image_vector[row * rows + column]);
+    }
+    /* go to the next line */
+    std::cout << std::endl;
+  }
+}
+
+
 void interface::output::LSHPrintInputFormat(void)
 {
   std::cout << "The input from the command line parameters should be something like this:\n\n"

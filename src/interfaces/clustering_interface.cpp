@@ -267,5 +267,7 @@ int interface::input::clustering::clusteringParseConfigFile(const std::string& f
     config.HC_probes = value_as_int;
   }
 
+  /* everythind is done, close the file and return */
+  config_file.close();
   return 1;
 }

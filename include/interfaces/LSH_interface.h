@@ -1,5 +1,5 @@
-#ifndef __LSH_INTERFACE__
-#define __LSH_INTERFACE__
+#ifndef _LSH_INTERFACE
+#define _LSH_INTERFACE
 
 #include <cstdlib>
 #include <cstdint>
