@@ -59,7 +59,7 @@ public:
     }
   }
 
-  std::vector<std::pair<int, T*>> ApproxNN (T* query, int N, int thresh) {
+  std::vector<std::pair<int, T*>> ApproxNN (T* query, int N, int thresh = 0) {
     std::vector<std::pair<int, T*>> d;
 
     for (int i = 0; i < N; i++)
@@ -86,7 +86,7 @@ public:
           std::sort(d.begin(), d.end(), comparePairs<T>);
         }
 
-        if (++itemsSearched >= thresh)
+        if (thresh != 0 && ++itemsSearched >= thresh)
           return d;
       }
     }
@@ -94,7 +94,7 @@ public:
     return d;
   }
 
-  std::vector<std::pair<int, T*>> RangeSearch (T* query, double radius, int thresh) {
+  std::vector<std::pair<int, T*>> RangeSearch (T* query, double radius, int thresh = 0) {
     std::vector<std::pair<int, T*>> d;
 
     int itemsSearched = 0;
@@ -117,7 +117,7 @@ public:
           d.push_back(tmpPair);
         }
 
-        if (++itemsSearched >= thresh)
+        if (thresh != 0 && ++itemsSearched >= thresh)
           return d;
       }
     }
