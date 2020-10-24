@@ -24,7 +24,7 @@ int main(int argc, char const *argv[]) {
   /* parse dataset */
   int ret3 = interface::ParseDataset(files.input_file, data);
 
-  LSH lshmain = LSH(data.number_of_images, 16, 28*28, lsh_input.k, lsh_input.L, lsh_input.R, pow(2,32)-5, data.images);
+  LSH<uint8_t> lshmain = LSH<uint8_t>(data.number_of_images, 16, 28*28, lsh_input.k, lsh_input.L, lsh_input.R, pow(2,32)-5, data.images);
 
   /* parse query set */
   int ret4 = interface::ParseDataset(files.query_file, queries);

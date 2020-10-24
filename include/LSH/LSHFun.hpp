@@ -6,6 +6,7 @@
 
 #include "../utils/numbers.hpp"
 
+template <typename T>
 class HashFunction {
   double searchRadius;      //search radius given by user
   int c;                    // constant to get W = c*searchRadius
@@ -51,7 +52,7 @@ public:
     }
   }
 
-  uint8_t HashVector (uint8_t* x) {
+  int HashVector (T* x) {
     std::vector<int> a;   // vector storing floor((Xi-Si)/W)
 
     unsigned long long int sum = 0;
@@ -69,9 +70,10 @@ public:
   }
 };
 
+template <typename T>
 class AmplifiedHashFunction {
 private:
-  std::vector<HashFunction> H;
+  std::vector<HashFunction<T>> H;
   double searchRadius;
   int c;            // constant to get W = c*searchRadius
   int k;            // number of H functions for g
@@ -100,11 +102,11 @@ public:
     M = pow(2, 32/k);
 
     for (int i = 0; i < k; i++) {
-      H.push_back(HashFunction(sr, c, k, d, m, mmod));
+      H.push_back(HashFunction<T>(sr, c, k, d, m, mmod));
     }
   }
 
-  unsigned long int HashVector (uint8_t* x) {
+  unsigned long int HashVector (T* x) {
     std::vector<uint8_t> hValues;
 
     for (int i = 0; i < k; i++) {

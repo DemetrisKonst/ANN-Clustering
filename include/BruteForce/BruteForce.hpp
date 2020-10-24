@@ -3,23 +3,22 @@
 
 #include "../metrics/metrics.hpp"
 
+template <typename T>
 class BruteForce {
 private:
-  uint8_t** data;
+  T** data;
   int N;
   int D;
 
 public:
-  BruteForce (int n, int d, uint8_t** data) : data(data), N(n), D(d) {
+  BruteForce (int n, int d, T** data) : data(data), N(n), D(d) {}
 
-  }
-
-  std::pair<int, uint8_t*> NearestNeighbor (uint8_t* query) {
+  std::pair<int, T*> NearestNeighbor (T* query) {
     int b = std::numeric_limits<int>::max();
-    uint8_t* d = NULL;
+    T* d = NULL;
 
     for (int i = 0; i < N; i++) {
-      int distance = metrics::ManhattanDistance(data[i], query);
+      int distance = metrics::ManhattanDistance<T>(data[i], query, D);
 
       if (distance < b) {
         b = distance;
@@ -30,9 +29,9 @@ public:
     return std::make_pair(b, d);
   }
 
-  std::pair<int, uint8_t*> RangeSearch (uint8_t* query, double radius) {
+  std::pair<int, T*> RangeSearch (T* query, double radius) {
     for (int i = 0; i < N; i++) {
-      int distance = metrics::ManhattanDistance(data[i], query);
+      int distance = metrics::ManhattanDistance<T>(data[i], query, D);
 
       if (distance < radius) {
         return std::make_pair(distance, data[i]);
