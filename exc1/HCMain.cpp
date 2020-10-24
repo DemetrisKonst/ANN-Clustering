@@ -27,7 +27,7 @@ int main(int argc, char const *argv[]) {
 
   // std::cout << hc_input.k << '\n';
   // LSH lshmain = LSH(data.number_of_images, 16, 28*28, lsh_input.k, lsh_input.L, lsh_input.R, pow(2,32)-5, data.images);
-  Hypercube hcmain = Hypercube(data.number_of_images, 4, 28*28, hc_input.R, pow(2,32)-5, data.images);
+  Hypercube<uint8_t> hcmain = Hypercube<uint8_t>(data.number_of_images, 4, 28*28, hc_input.R, pow(2,32)-5, data.images);
 
   /* parse query set */
   int ret4 = interface::ParseDataset(files.query_file, queries);
