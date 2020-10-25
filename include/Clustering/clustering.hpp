@@ -23,11 +23,13 @@ namespace clustering
     uint16_t dimension;
     T* components;
     std::vector<Item<T>*>* vectors_in_cluster;
+    double silhouette;
 
 
     /* constructor */
     ClusterCenter(const T* x, const uint16_t& d): dimension(d)
     {
+      silhouette = std::numeric_limits<double>::lowest();
       components = new T[dimension];
       std::memcpy(components, x, sizeof(T) * dimension);
       vectors_in_cluster = new std::vector<Item<T>*>;
@@ -147,7 +149,167 @@ namespace clustering
     }
 
 
-    /* method used to compute the silhouette of each element inside the cluster */
+    /* method used to compute the average distance of each element inside the cluster */
+    void compute_average_distance_of_objects_in_cluster(double* a, const uint16_t& dimension, const metrics::Metric& metric=metrics::MANHATTAN)
+    {
+      /* number of elements inside the cluster */
+      uint32_t number_of_elements_in_cluster = vectors_in_cluster->size();
+
+      /* for each item inside the cluster */
+      for (int i = 0; i < number_of_elements_in_cluster; i++)
+      {
+        /* get the Item as a variable to facilitate coding */
+        Item<T>* item = (*vectors_in_cluster)[i];
+        /* get the index of the item */
+        uint32_t index = item->id;
+
+        /* compute the total distance of the item in the cluster */
+        double total_distance = 0.0;
+
+        /* for each other item in the cluster, add the distance to it in the total distance */
+        for (int j = 0; j < number_of_elements_in_cluster; j++)
+        {
+          /* get the second Item as a variable */
+          Item<T>* item2 = (*vectors_in_cluster)[j];
+
+          /* get the distance that will be computed */
+          double distance = 0.0;
+
+          /* distinguish each type of distance and compute it */
+          switch(metric)
+          {
+            case metrics::MANHATTAN:
+            {
+              distance = metrics::ManhattanDistance(item->data, item2->data, dimension);
+              break;
+            }
+            case metrics::EUCLIDEAN:
+            {
+              distance = metrics::EuclideanDistance(item->data, item2->data, dimension);
+              break;
+            }
+            case metrics::MAX:
+            {
+              distance = metrics::MaxDistance(item->data, item2->data, dimension);
+              break;
+            }
+            case metrics::NON_ZERO:
+            {
+              distance = metrics::nonZeroDistance(item->data, item2->data, dimension);
+              break;
+            }
+            default:
+            {
+              std::cout << "Unknown metric in ClusterCenter::compute_average_distance_of_objects_in_cluster().\n";
+              break;
+            }
+          }
+
+          /* add the distance to the total distance */
+          total_distance += distance;
+        }
+
+        /* compute the a value of the specific data point and store it in the array */
+        double a_value = ((double) total_distance) / (number_of_elements_in_cluster - 1);
+        a[index] = a_value;
+      }
+    }
+
+
+    /* method used to compute the average distance of each element inside the cluster to a point outside of it */
+    double compute_average_distance_of_point_to_objects_in_cluster(Item<T>* p, const uint16_t& dimension, const metrics::Metric& metric=metrics::MANHATTAN)
+    {
+      /* get the number of elements in the cluster */
+      uint32_t number_of_elements_in_cluster = vectors_in_cluster->size();
+
+      /* store the total distance inside a variable */
+      double total_distance = 0.0;
+
+      /* for each data point inside the cluster */
+      for (int i = 0; i < number_of_elements_in_cluster; i++)
+      {
+        /* get the Item as a variable */
+        Item<T>* item = (*vectors_in_cluster)[i];
+
+        /* get the distance that will be computed */
+        double distance = 0.0;
+
+        /* distinguish each type of distance and compute it */
+        switch (metric)
+        {
+          case metrics::MANHATTAN:
+          {
+            distance = metrics::ManhattanDistance(p->data, item->data, dimension);
+            break;
+          }
+          case metrics::EUCLIDEAN:
+          {
+            distance = metrics::EuclideanDistance(p->data, item->data, dimension);
+            break;
+          }
+          case metrics::MAX:
+          {
+            distance = metrics::MaxDistance(p->data, item->data, dimension);
+            break;
+          }
+          case metrics::NON_ZERO:
+          {
+            distance = metrics::nonZeroDistance(p->data, item->data, dimension);
+            break;
+          }
+          default:
+          {
+            std::cout << "Unknown metric in ClusterCenter::compute_average_distance_of_objects_in_cluster().\n";
+            break;
+          }
+
+          /* add the distance to the total distance */
+          total_distance += distance;
+        }
+
+        /* add the distance to the total distance */
+        total_distance += distance;
+      }
+
+      /* compute the b value for the specific item and return */
+      double b_value = ((double) total_distance) / number_of_elements_in_cluster;
+      return b_value;
+    }
+
+
+    /* method to compute the overall silhouette of a cluster */
+    void compute_cluster_silhouette(double* s)
+    {
+      /* sum of all the silhouettes of objects in the cluster */
+      double total_silhouette = 0.0;
+
+      /* number of elements inside the cluster */
+      uint32_t number_of_elements_in_cluster = vectors_in_cluster->size();
+
+      /* for each item inside the cluster */
+      for (int i = 0; i < number_of_elements_in_cluster; i++)
+      {
+        /* get the Item as a variable to facilitate coding */
+        Item<T>* item = (*vectors_in_cluster)[i];
+        /* get the index of the item */
+        uint32_t index = item->id;
+
+        /* add the silhouette of this item to the total silhouette */
+        total_silhouette += s[index];
+
+      }
+
+      /* compute the silhouette of the cluster and assign it */
+      double cluster_silhouette = ((double) total_silhouette) / number_of_elements_in_cluster;
+      silhouette = cluster_silhouette;
+    }
+
+
+    /* getter method to get the silhouette of a cluster */
+    double get_silhouette(void)
+    {
+      return silhouette;
+    }
 
   };
 
@@ -441,12 +603,38 @@ namespace clustering
       /* compute the second closest cluster for each data point */
       for (int i = 0; i < data.n; i++)
       {
-        second_closest_cluster[i] = _find_second_closest_center(data.items[i]);
+        long int index = data.items[i]->id;
+        second_closest_cluster[index] = _find_second_closest_center(data.items[i]);
+      }
+
+      /* compute a[i] value for every data point inside a cluster c */
+      for (int c = 0; c < K; c++)
+      {
+        centers[c]->compute_average_distance_of_objects_in_cluster(a, data.dimension);
+      }
+
+      /* compute b[i] value for each data point i */
+      for (int i = 0; i < data.n; i++)
+      {
+        long int index = data.items[i]->id;
+        b[index] = centers[second_closest_cluster[index]]->compute_average_distance_of_point_to_objects_in_cluster(data.items[index], data.dimension);
+      }
+
+      /* and now for each data point i, compute its final silhouette value */
+      for (int i = 0; i < data.n; i++)
+      {
+        long int index = data.items[i]->id;
+        s[index] = (b[index] - a[index]) / ((double) std::max(a[index], b[index]));
+      }
+
+      /* now that all silhouettes have been computed, compute the silhouettes of clusters */
+      for (int c = 0; c < K; c++)
+      {
+        centers[c]->compute_cluster_silhouette(s);
       }
 
 
-
-      /* free up used memory */
+      /* free up used memory and finish */
       delete[] a;
       delete[] b;
       delete[] second_closest_cluster;
@@ -510,10 +698,18 @@ namespace clustering
     }
 
 
-    /* method that returns the Cluster Centers */
-    ClusterCenter<T>** get_centers(void)
+    /* method that returns a pointer to avector with all the images inside a specified cluster */
+    std::vector<Item<T>*>* get_vectors_in_cluster(const uint16_t& cluster)
     {
-      return centers;
+      /* check for wrong input */
+      if (cluster > K)
+      {
+        std::cout << "Error in calling Clustering::get_vectors_in_cluster(): Cluster " << cluster << " does not exist." << std::endl;
+        return NULL;
+      }
+
+      /* if input is valid, return a pointer to the vectors in that specific cluster */
+      return centers[cluster]->vectors_in_cluster;
     }
 
 
@@ -543,10 +739,27 @@ namespace clustering
       double average_silhouette = ((double) sum) / data.n;
 
       /* free the silhouettes array */
-      delete[] silhouettes;
+      delete[] s;
 
       /* return the result */
       return average_silhouette;
+    }
+
+
+    /* method used to retrieve the silhouette of each centroid */
+    double* get_silhouettes(void)
+    {
+      /* create an array for the silhouettes */
+      double* silhouettes = new double[K];
+
+      /* get the silhouette of each cluster */
+      for (int c = 0; c < K; c++)
+      {
+        silhouettes[c] = centers[c]->get_silhouette();
+      }
+
+      /* return the array */
+      return silhouettes;
     }
 
   };

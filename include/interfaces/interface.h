@@ -48,7 +48,7 @@ namespace interface
     uint16_t dimension = 0;
     Item<T>** items = NULL;
 
-    Data<T>(Dataset& dataset)
+    Data(Dataset& dataset)
     {
       /* initialize the values of the Data */
       n = dataset.number_of_images;
@@ -60,6 +60,20 @@ namespace interface
       {
         items[i] = new Item<T>(i, dataset.images[i], false, false);
       }
+    }
+
+    ~Data(void)
+    {
+      /* free each item separately */
+      for (int i = 0; i < n; i++)
+      {
+        delete items[i];
+      }
+
+      /* now delete the items array */
+      delete[] items;
+      items = NULL;
+
     }
   };
 
