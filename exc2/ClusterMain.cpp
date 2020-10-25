@@ -45,20 +45,31 @@ int main(int argc, char const *argv[]) {
 
 
   /* show input */
-  std::cout << "complete: " << cluster_input.complete << ", method: " << cluster_input.algorithm << std::endl;
-  std::cout << "\nClusters: " << cluster_config.clusters_K << ", L = " << +cluster_config.LSH_L << ", LSH_k = " << +cluster_config.LSH_k
-            << ", HC_M = " << cluster_config.HC_M << ", HC_k = " << +cluster_config.HC_k << ", HC_probes = " << cluster_config.HC_probes << "\n\n";
+  // std::cout << "complete: " << cluster_input.complete << ", method: " << cluster_input.algorithm << std::endl;
+  // std::cout << "\nClusters: " << cluster_config.clusters_K << ", L = " << +cluster_config.LSH_L << ", LSH_k = " << +cluster_config.LSH_k
+  //           << ", HC_M = " << cluster_config.HC_M << ", HC_k = " << +cluster_config.HC_k << ", HC_probes = " << cluster_config.HC_probes << "\n\n";
 
   /* create a Data object that will be used to move around the data */
   interface::Data<uint8_t> data(dataset2);
 
   /* create a Clustering object in order to perform the clustering */
   clustering::Clustering<uint8_t> cluster(cluster_config, data);
+  /* measure the time taken by the process */
+  auto start = std::chrono::high_resolution_clock::now();
   cluster.perform_clustering(data, "Classic");
+  auto end = std::chrono::high_resolution_clock::now();
+  double duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
   /* get the silhouette and print it */
   double average_silhouette = cluster.compute_average_silhouette(data);
-  std::cout << "\nAverage Silhouette: " << average_silhouette << "\n\n";
+
+  /* create an Output object, and build it */
+  interface::output::clustering::ClusteringOutput output;
+  cluster.build_output(output, data, cluster_input, duration);
+
+  /* log the results to the outfile */
+  interface::output::clustering::writeOutput(files.output_file, output, status);
+
 
   // /* get the vectors that got mapped in cluster 3 */
   // uint16_t target_cluster = 3;
@@ -81,6 +92,7 @@ int main(int argc, char const *argv[]) {
 
   /* free up the allocated space and return */
   interface::freeDataset(dataset);
+  cluster.free_output_object_memory(output);
 
   /////////////////////// SMALLER DATASET ///////////////////////
   delete[] dataset2.images;

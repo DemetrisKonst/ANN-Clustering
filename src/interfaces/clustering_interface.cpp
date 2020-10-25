@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <fstream>
 #include <regex>
+#include <iomanip>
 
 #include "../../include/interfaces/clustering_interface.h"
 
@@ -269,5 +270,98 @@ int interface::input::clustering::ClusteringParseConfigFile(const std::string& f
 
   /* everythind is done, close the file and return */
   config_file.close();
+  return 1;
+}
+
+
+int interface::output::clustering::writeOutput(const std::string& outfile_name, const interface::output::clustering::ClusteringOutput& output, interface::ExitCode& status)
+{
+  /* create in ifstream object to open the output file */
+  std::ofstream outfile;
+  outfile.open(outfile_name, std::ios::out | std::ios::trunc);
+
+  /* make sure that the file successfully opened */
+  if (!outfile.is_open())
+  {
+    status = INVALID_OUTFILE_PATH;
+    return 0;
+  }
+
+  /* log information about algorithm used */
+  outfile << "Algorithm: ";
+  if (output.method == "Classic")
+  {
+    outfile << "Lloyds";
+  }
+  else if (output.method == "LSH")
+  {
+    outfile << "Range Search LSH";
+  }
+  else
+  {
+    outfile << "Range Search Hypercube";
+  }
+  outfile << std::endl;
+
+  /* log information about clusters */
+  for (int c = 0; c < output.K; c++)
+  {
+    outfile << "Cluster-" << c + 1 << " {size: " << output.cluster_sizes[c] << " centroid: [";
+    for (int j = 0; j < output.d; j++)
+    {
+      outfile << +output.centroids[c][j];
+      if (j < output.d - 1)
+      {
+        outfile << " ";
+      }
+    }
+    outfile << "]}" << std::endl;
+  }
+
+  /* log information about clustering time */
+  outfile << "clustering_time: " << output.clustering_time / 1000000 << std::endl;
+
+  /* log information about silhouettes */
+  outfile << "Silhouette: [";
+  for (int c = 0; c < output.K; c++)
+  {
+    outfile << output.cluster_silhouettes[c] << ", ";
+  }
+  outfile << output.total_silhouette << "]" << std::endl;
+
+
+  /* check if the -complete flag was given */
+  if (output.complete)
+  {
+    /* if yes, print the centroid and the images in it of each cluster */
+    outfile << std::endl;
+    for (int c = 0; c < output.K; c++)
+    {
+      outfile << "Cluster-" << c + 1 << " {[";
+      for (int j = 0; j < output.d; j++)
+      {
+        outfile << +output.centroids[c][j];
+        if (j < output.d - 1)
+        {
+          outfile << " ";
+        }
+      }
+      outfile << "], ";
+      for (int i = 0; i < output.items[c]->size(); i++)
+      {
+        Item<uint8_t>* item = (*output.items[c])[i];
+        outfile << item->id;
+        if (i < output.items[c]->size() - 1)
+        {
+          outfile << ", ";
+        }
+      }
+      outfile << "}" << std::endl;
+    }
+
+  }
+
+  /* everything is done, close the outfile and return */
+  outfile.close();
   return 1;
 }

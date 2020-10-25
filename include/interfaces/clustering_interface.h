@@ -37,6 +37,32 @@ namespace interface
       int ClusteringParseConfigFile(const std::string& filename, ClusteringConfig& config, ExitCode& status);
     }
   }
+
+  /* namespace regarding output file utilities */
+  namespace output
+  {
+    /* namespace regarding clustering */
+    namespace clustering
+    {
+      /* struct used to group all the clustering output information */
+      typedef struct ClusteringOutput
+      {
+        uint16_t K = 10;
+        uint16_t d = 0;
+        std::string method = "Classic";
+        std::vector<int> cluster_sizes;
+        std::vector<uint8_t*> centroids;
+        double clustering_time = 0.0;
+        double* cluster_silhouettes = NULL;
+        double total_silhouette = 0.0;
+        bool complete = false;
+        std::vector<Item<uint8_t>*>** items;
+      } ClusteringOutput;
+
+      /* function that writes the desired output to the outfile */
+      int writeOutput(const std::string& outfile_name, const ClusteringOutput& output, ExitCode& status);
+    }
+  }
 }
 
 

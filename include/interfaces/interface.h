@@ -4,6 +4,11 @@
 
 #include <cstdlib>
 #include <cstdint>
+#include <fstream>
+#include <vector>
+#include <utility>
+#include <algorithm>
+#include <limits>
 
 #include "interface_utils.h"
 #include "../core/item.hpp"

@@ -311,6 +311,27 @@ namespace clustering
       return silhouette;
     }
 
+
+    /* getter method to get the size of the cluster */
+    int get_cluster_size(void)
+    {
+      return vectors_in_cluster->size();
+    }
+
+
+    /* getter method that returns the components of the cluster center */
+    T* get_components(void)
+    {
+      return components;
+    }
+
+
+    /* getter method that returns the vectors inside the cluster */
+    std::vector<Item<T>*>* get_vectors_inside_cluster(void)
+    {
+      return vectors_in_cluster;
+    }
+
   };
 
 
@@ -326,6 +347,7 @@ namespace clustering
     uint32_t HC_M = 10;
     uint8_t HC_k = 3;
     uint16_t HC_probes = 2;
+    double silhouette = 0.0;
     ClusterCenter<T>** centers;
     std::vector<double>* silhouettes;
 
@@ -698,21 +720,6 @@ namespace clustering
     }
 
 
-    /* method that returns a pointer to avector with all the images inside a specified cluster */
-    std::vector<Item<T>*>* get_vectors_in_cluster(const uint16_t& cluster)
-    {
-      /* check for wrong input */
-      if (cluster > K)
-      {
-        std::cout << "Error in calling Clustering::get_vectors_in_cluster(): Cluster " << cluster << " does not exist." << std::endl;
-        return NULL;
-      }
-
-      /* if input is valid, return a pointer to the vectors in that specific cluster */
-      return centers[cluster]->vectors_in_cluster;
-    }
-
-
     /* method used to compute silhouette of a clustering */
     double compute_average_silhouette(const interface::Data<T>& data)
     {
@@ -737,12 +744,28 @@ namespace clustering
 
       /* compute the average silhouette */
       double average_silhouette = ((double) sum) / data.n;
+      silhouette = average_silhouette;
 
       /* free the silhouettes array */
       delete[] s;
 
       /* return the result */
       return average_silhouette;
+    }
+
+
+    /* method that returns a pointer to a vector with all the images inside a specified cluster */
+    std::vector<Item<T>*>* get_vectors_in_cluster(const uint16_t& cluster)
+    {
+      /* check for wrong input */
+      if (cluster > K)
+      {
+        std::cout << "Error in calling Clustering::get_vectors_in_cluster(): Cluster " << cluster << " does not exist." << std::endl;
+        return NULL;
+      }
+
+      /* if input is valid, return a pointer to the vectors in that specific cluster */
+      return centers[cluster]->get_vectors_inside_cluster();
     }
 
 
@@ -760,6 +783,83 @@ namespace clustering
 
       /* return the array */
       return silhouettes;
+    }
+
+
+    /* method that returns a pointer to a vector that contains the size of each cluster */
+    std::vector<int> get_cluster_sizes(void)
+    {
+      /* create the vector that will be returned */
+      std::vector<int> sizes;
+
+      /* go through each center to build the vector with the sizes */
+      for (int c = 0; c < K; c++)
+      {
+        sizes.push_back(centers[c]->get_cluster_size());
+      }
+
+      /* return the pointer to the vector */
+      return sizes;
+    }
+
+
+    /* method that returns a pointer to a vector that contains the components of each centroid */
+    std::vector<T*> get_centroid_components(void)
+    {
+      /* create the vector that will be returned */
+      std::vector<T*> centroids;
+
+      /* go through each center to build the vector with the sizes */
+      for (int c = 0; c < K; c++)
+      {
+        centroids.push_back(centers[c]->get_components());
+      }
+
+      /* return the pointer to the vector */
+      return centroids;
+    }
+
+
+    /* method that returns an array where each entry is an array of items inside a cluster */
+    std::vector<Item<T>*>** get_items_per_cluster(void)
+    {
+      /* create an array of vectors of clusters */
+      std::vector<Item<T>*>** items = new std::vector<Item<T>*>*[K];
+
+      /* fill this array with the appropriate items */
+      for (int c = 0; c < K; c++)
+      {
+        items[c] = get_vectors_in_cluster(c);
+      }
+
+      /* return the variable */
+      return items;
+    }
+
+
+    /* method that frees the memory which the get_items_per_cluster() created */
+    void free_output_object_memory(interface::output::clustering::ClusteringOutput& output)
+    {
+      /* delete the arrays */
+      delete[] output.cluster_silhouettes;
+      delete[] output.items;
+    }
+
+
+    /* method used to build the output object that will be "written" in the outfile */
+    void build_output(interface::output::clustering::ClusteringOutput& output, const interface::Data<T>& data, interface::input::clustering::ClusteringInput& input, const double& clustering_time)
+    {
+      /* assign the correct values to the fields */
+      output.K = K;
+      output.d = data.dimension;
+      output.method = input.algorithm;
+      output.cluster_sizes = get_cluster_sizes();
+      output.centroids = get_centroid_components();
+      output.clustering_time = clustering_time;
+      output.cluster_silhouettes = get_silhouettes();
+      output.total_silhouette = silhouette;
+      output.complete = input.complete;
+      output.items = get_items_per_cluster();
     }
 
   };
