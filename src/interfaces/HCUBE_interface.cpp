@@ -10,7 +10,7 @@
 #include "../../include/interfaces/HCUBE_interface.h"
 
 
-int interface::input::HC::HCParseInput(const int& argc, const char* argv[], interface::input::HC::HC_input& input, interface::IOFiles& files, interface::ExitCode& status)
+int interface::input::HC::HCParseInput(const int& argc, const char* argv[], interface::input::HC::HCInput& input, interface::IOFiles& files, interface::ExitCode& status)
 {
   /* first check that at least some parameters have been given */
   if (argc == 1)

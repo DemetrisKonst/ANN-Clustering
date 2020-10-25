@@ -11,7 +11,7 @@
 
 
 
-int interface::input::LSH::LSHParseInput(const int& argc, const char* argv[], interface::input::LSH::LSH_input& input, interface::IOFiles& files, interface::ExitCode& status)
+int interface::input::LSH::LSHParseInput(const int& argc, const char* argv[], interface::input::LSH::LSHInput& input, interface::IOFiles& files, interface::ExitCode& status)
 {
   /* first check that at least some parameters have been given */
   if (argc == 1)

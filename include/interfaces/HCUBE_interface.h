@@ -28,7 +28,7 @@ namespace interface
       } HCInput;
 
       /* function to parse command line parameters */
-      int HCUBEParseInput(const int& argc, const char* argv[], HCUBE_input& input, IOFiles& files, ExitCode& status);
+      int HCParseInput(const int& argc, const char* argv[], HCInput& input, IOFiles& files, ExitCode& status);
     }
 
   }

@@ -12,19 +12,21 @@ int main(int argc, char const *argv[]) {
 
   /* define the variables */
   interface::ExitCode status;
-  interface::Dataset data;
+  interface::Dataset dataset;
   interface::Dataset queries;
   interface::IOFiles files;
-  interface::input::LSH::LSH_input lsh_input;
+  interface::input::LSH::LSHInput lsh_input;
   // interface::input::HCUBE::HCUBE_input hcube_input;
 
   /* parse LSH input */
   int ret = interface::input::LSH::LSHParseInput(argc, argv, lsh_input, files, status);
 
   /* parse dataset */
-  int ret3 = interface::ParseDataset(files.input_file, data);
+  int ret3 = interface::ParseDataset(files.input_file, dataset);
+  interface::Data<uint8_t> data(dataset);
 
-  LSH<uint8_t> lshmain = LSH<uint8_t>(data.number_of_images, 16, 28*28, lsh_input.k, lsh_input.L, lsh_input.R, pow(2,32)-5, data.images);
+  // LSH<uint8_t> lshmain = LSH<uint8_t>(data.number_of_images, 16, 28*28, lsh_input.k, lsh_input.L, lsh_input.R, pow(2,32)-5, data.images);
+  LSH<uint8_t> lshmain = LSH<uint8_t>(lsh_input, data);
 
   /* parse query set */
   int ret4 = interface::ParseDataset(files.query_file, queries);

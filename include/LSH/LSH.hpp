@@ -27,14 +27,15 @@ private:
   AmplifiedHashFunction<T>** g;
 
 public:
-  LSH (LSHInput* lshi, Data* ds) {
-    k = lshi->k;
-    L = lshi->L;
-    r = lshi->R;
-    n = ds->n;
-    D = ds->d;
-    Item<T>** items = ds->items;
+  LSH (interface::input::LSH::LSHInput lshi, interface::Data<T> ds) {
+    k = lshi.k;
+    L = lshi.L;
+    r = lshi.R;
+    n = ds.n;
+    D = ds.dimension;
+    Item<T>** items = ds.items;
     m = pow(2, 32) - 5;
+    int div = 16;
 
     htSize = n/div;
 
@@ -47,11 +48,11 @@ public:
 
 
     for (int i = 0; i < L; i++) {
-      g[i] = new AmplifiedHashFunction<T>(r, 4, k, d, pow(2, 32) - 5, mmod);
+      g[i] = new AmplifiedHashFunction<T>(r, 4, k, D, pow(2, 32) - 5, mmod);
 
       H[i] = new std::vector<Item<T>*>[htSize];
       for (int j = 0; j < htSize; j++) {
-        std::vector<Item<T>> tmpVec;
+        std::vector<Item<T>*> tmpVec;
         H[i][j] = tmpVec;
       }
     }

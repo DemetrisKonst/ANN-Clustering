@@ -3,6 +3,8 @@
 #include "../core/item.hpp"
 #include "../LSH/LSHFun.hpp"
 #include "../metrics/metrics.hpp"
+#include "../interfaces/HCUBE_interface.h"
+// #include "../interfaces/interface.h"
 
 template <typename T>
 bool comparePairs (std::pair<int, Item<T>*> x, std::pair<int, Item<T>*> y) {
@@ -22,12 +24,12 @@ private:
 
   std::vector<Item<T>*>* H;
 public:
-  Hypercube(HCInput* hci, Data* ds) {
-    HCdim = hci->k;
-    searchRadius = hci->R;
-    n = ds->n;
-    datadim = ds->d;
-    Item<T>** items = ds->items;
+  Hypercube(interface::input::HC::HCInput hci, interface::Data<T> ds) {
+    HCdim = hci.k;
+    searchRadius = hci.R;
+    n = ds.n;
+    datadim = ds.dimension;
+    Item<T>** items = ds.items;
     m = pow(2, 32) - 5;
 
     int vertexCount = pow(2, HCdim);

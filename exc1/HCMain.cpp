@@ -13,21 +13,23 @@ int main(int argc, char const *argv[]) {
 
   /* define the variables */
   interface::ExitCode status;
-  interface::Dataset data;
+  interface::Dataset dataset;
   interface::Dataset queries;
   interface::IOFiles files;
-  interface::input::HCUBE::HCUBE_input hc_input;
+  interface::input::HC::HCInput hc_input;
   // interface::input::HCUBE::HCUBE_input hcube_input;
 
   /* parse LSH input */
-  int ret = interface::input::HCUBE::HCUBEParseInput(argc, argv, hc_input, files, status);
+  int ret = interface::input::HC::HCParseInput(argc, argv, hc_input, files, status);
 
   /* parse dataset */
-  int ret3 = interface::ParseDataset(files.input_file, data);
+  int ret3 = interface::ParseDataset(files.input_file, dataset);
+
+  interface::Data<uint8_t> data(dataset);
 
   // std::cout << hc_input.k << '\n';
   // LSH lshmain = LSH(data.number_of_images, 16, 28*28, lsh_input.k, lsh_input.L, lsh_input.R, pow(2,32)-5, data.images);
-  Hypercube<uint8_t> hcmain = Hypercube<uint8_t>(data.number_of_images, 4, 28*28, hc_input.R, pow(2,32)-5, data.images);
+  Hypercube<uint8_t> hcmain = Hypercube<uint8_t>(hc_input, data);
 
   /* parse query set */
   int ret4 = interface::ParseDataset(files.query_file, queries);
