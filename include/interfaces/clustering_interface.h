@@ -13,14 +13,14 @@ namespace interface
     namespace clustering
     {
       /* struct used to define the clustering input from the command line */
-      typedef struct clustering_input
+      typedef struct ClusteringInput
       {
         bool complete = false;
         std::string algorithm = "";
-      } clustering_input;
+      } ClusteringInput;
 
       /* struct used to define the clustering input from the configuration file */
-      typedef struct clustering_config
+      typedef struct ClusteringConfig
       {
         uint16_t clusters_K = 10;
         uint8_t LSH_L = 3;
@@ -28,13 +28,13 @@ namespace interface
         uint32_t HC_M = 10;
         uint8_t HC_k = 3;
         uint16_t HC_probes = 2;
-      } clustering_config;
+      } ClusteringConfig;
 
       /* function to parse command line parameters */
-      int clusteringParseInput(const int& argc, const char* argv[], clustering_input& input, IOCFiles& files, ExitCode& status);
+      int ClusteringParseInput(const int& argc, const char* argv[], ClusteringInput& input, IOCFiles& files, ExitCode& status);
 
       /* function to parse configuration file */
-      int clusteringParseConfigFile(const std::string& filename, clustering_config& config, ExitCode& status);
+      int ClusteringParseConfigFile(const std::string& filename, ClusteringConfig& config, ExitCode& status);
     }
   }
 }

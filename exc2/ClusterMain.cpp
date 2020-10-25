@@ -11,16 +11,16 @@ int main(int argc, char const *argv[]) {
   interface::ExitCode status;
   interface::Dataset dataset;
   interface::IOCFiles files;
-  interface::input::clustering::clustering_input cluster_input;
-  interface::input::clustering::clustering_config cluster_config;
+  interface::input::clustering::ClusteringInput cluster_input;
+  interface::input::clustering::ClusteringConfig cluster_config;
 
   /* parse clustering input */
-  int ret = interface::input::clustering::clusteringParseInput(argc, argv, cluster_input, files, status);
+  int ret = interface::input::clustering::ClusteringParseInput(argc, argv, cluster_input, files, status);
   if (ret != 1)
   {
     interface::output::PrintErrorMessageAndExit(status);
   }
-  ret = interface::input::clustering::clusteringParseConfigFile(files.configuration_file, cluster_config, status);
+  ret = interface::input::clustering::ClusteringParseConfigFile(files.configuration_file, cluster_config, status);
   if (ret != 1)
   {
     interface::output::PrintErrorMessageAndExit(status);
@@ -37,8 +37,9 @@ int main(int argc, char const *argv[]) {
   /* create a Data object that will be used to move around the data */
   interface::Data<uint8_t> data(dataset);
 
-  clustering::Clustering<uint8_t> cluster(cluster_config, dataset);
-  cluster.perform_clustering(dataset, "Classic");
+  /* create a Clustering object in order to perform the clustering */
+  clustering::Clustering<uint8_t> cluster(cluster_config, data);
+  cluster.perform_clustering(data, "Classic");
 
 
 

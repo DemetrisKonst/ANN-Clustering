@@ -3,7 +3,7 @@
 #include <utility>
 #include <cmath>
 
-#include "../include/interfaces/HCUBE_interface.h"
+#include "../include/interfaces/HC_interface.h"
 
 #include "../include/Hypercube/Hypercube.hpp"
 #include "../include/BruteForce/BruteForce.hpp"

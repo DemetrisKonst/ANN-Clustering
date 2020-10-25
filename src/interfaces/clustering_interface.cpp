@@ -11,7 +11,7 @@
 #include "../../include/interfaces/clustering_interface.h"
 
 
-int interface::input::clustering::clusteringParseInput(const int& argc, const char* argv[], interface::input::clustering::clustering_input& input, interface::IOCFiles& files, interface::ExitCode& status)
+int interface::input::clustering::ClusteringParseInput(const int& argc, const char* argv[], interface::input::clustering::ClusteringInput& input, interface::IOCFiles& files, interface::ExitCode& status)
 {
   /* first check that at least some parameters have been given */
   if (argc == 1)
@@ -126,7 +126,7 @@ int interface::input::clustering::clusteringParseInput(const int& argc, const ch
 }
 
 
-int interface::input::clustering::clusteringParseConfigFile(const std::string& filename, interface::input::clustering::clustering_config& config, interface::ExitCode& status)
+int interface::input::clustering::ClusteringParseConfigFile(const std::string& filename, interface::input::clustering::ClusteringConfig& config, interface::ExitCode& status)
 {
   /* create in ifstream object to read the input from the configuration file */
   std::ifstream config_file(filename);

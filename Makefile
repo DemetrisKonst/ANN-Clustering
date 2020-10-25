@@ -21,7 +21,7 @@ HCMain:
 	$(CC) -c -o object/HCMain.o exc1/HCMain.cpp
 
 HCInterface.o:
-	$(CC) -c -o object/HCInterface.o src/interfaces/HCUBE_interface.cpp
+	$(CC) -c -o object/HCInterface.o src/interfaces/HC_interface.cpp
 
 # compile LSH
 LSH: LSHMain LSHInterface.o interface_utils.o interface.o

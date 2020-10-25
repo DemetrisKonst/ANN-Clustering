@@ -3,8 +3,7 @@
 #include "../core/item.hpp"
 #include "../LSH/LSHFun.hpp"
 #include "../metrics/metrics.hpp"
-#include "../interfaces/HCUBE_interface.h"
-// #include "../interfaces/interface.h"
+#include "../interfaces/HC_interface.h"
 
 template <typename T>
 bool comparePairs (std::pair<int, Item<T>*> x, std::pair<int, Item<T>*> y) {

@@ -10,6 +10,7 @@
 
 #include "../interfaces/clustering_interface.h"
 #include "../metrics/metrics.hpp"
+#include "../core/item.hpp"
 
 
 /* namespace used to implement clustering algorithms */
@@ -21,7 +22,7 @@ namespace clustering
   {
     uint16_t dimension;
     T* components;
-    std::vector<uint32_t>* vectors_in_cluster;
+    std::vector<Item<T>*>* vectors_in_cluster;
 
 
     /* constructor */
@@ -29,7 +30,7 @@ namespace clustering
     {
       components = new T[dimension];
       std::memcpy(components, x, sizeof(T) * dimension);
-      vectors_in_cluster = new std::vector<uint32_t>;
+      vectors_in_cluster = new std::vector<Item<T>*>;
     }
 
 
@@ -42,7 +43,7 @@ namespace clustering
 
 
     /* method to compute distance between centroid and a point */
-    double distance_to_point(T* p, const metrics::Metric& metric=metrics::MANHATTAN)
+    double distance_to_point(Item<T>* p, const metrics::Metric& metric=metrics::MANHATTAN)
     {
       /* variable that will contain the distance of the 2 points */
       double distance = 0;
@@ -52,22 +53,22 @@ namespace clustering
       {
         case metrics::MANHATTAN:
         {
-          distance = metrics::ManhattanDistance(components, p, dimension);
+          distance = metrics::ManhattanDistance(components, p->data, dimension);
           break;
         }
         case metrics::EUCLIDEAN:
         {
-          distance = metrics::EuclideanDistance(components, p, dimension);
+          distance = metrics::EuclideanDistance(components, p->data, dimension);
           break;
         }
         case metrics::MAX:
         {
-          distance = metrics::MaxDistance(components, p, dimension);
+          distance = metrics::MaxDistance(components, p->data, dimension);
           break;
         }
         case metrics::NON_ZERO:
         {
-          distance = metrics::nonZeroDistance(components, p, dimension);
+          distance = metrics::nonZeroDistance(components, p->data, dimension);
           break;
         }
         default:
@@ -90,14 +91,14 @@ namespace clustering
 
 
     /* method used to add a data point to the cluster of cluster center */
-    void add_to_cluster(uint32_t p)
+    void add_to_cluster(Item<T>* p)
     {
       vectors_in_cluster->push_back(p);
     }
 
 
     /* method used to compute the new cluster center from the data points in the cluter; returns true if the center changes; else false */
-    void compute_new_center_from_data(bool* center_changed, const interface::Dataset& data)
+    void compute_new_center_from_data(bool* center_changed)
     {
       /* create the new center */
       T* new_center = new T[dimension];
@@ -112,8 +113,8 @@ namespace clustering
         for (int i = 0; i < vectors_in_cluster->size(); i++)
         {
           /* add the d-th component of the i-th data point */
-          uint32_t index = (*vectors_in_cluster)[i];
-          sum += data.images[index][d];
+          Item<T>* item = (*vectors_in_cluster)[i];
+          sum += item->data[d];
         }
 
         /* compute the new value and assign it to the center */
@@ -208,18 +209,18 @@ namespace clustering
 
 
     /* helper method to compute the min distances of each data point to any center */
-    void _compute_distances(double* distances, double* sum_of_distances, const uint16_t& current_centers, const interface::Dataset& data, const uint32_t& n)
+    void _compute_distances(double* distances, double* sum_of_distances, const uint16_t& current_centers, const interface::Data<T>& data)
     {
       /* loop through the dataset to compute the squared distance to the centers */
-      for (int i = 0; i < n; i++)
+      for (int i = 0; i < data.n; i++)
       {
         /* variable to store the min distance found */
-        double min_distance = centers[0]->distance_to_point(data.images[i]);
+        double min_distance = centers[0]->distance_to_point(data.items[i]);
 
         /* compare the distance to each available center */
         for (int c = 1; c < current_centers; c++)
         {
-          double distance = centers[c]->distance_to_point(data.images[i]);
+          double distance = centers[c]->distance_to_point(data.items[i]);
           if (distance < min_distance)
           {
             min_distance = distance;
@@ -251,19 +252,14 @@ namespace clustering
 
 
     /* method that implements intialization++ */
-    void _initialize_centers(const interface::Dataset& data)
+    void _initialize_centers(const interface::Data<T>& data)
     {
-      /* get the number of training examples */
-      uint32_t n = data.number_of_images;
-      /* get the dimension of the training examples */
-      uint16_t d = data.rows_per_image * data.columns_per_image;
-
       /* pick an example at random */
       srand(time(NULL));
-      uint32_t random_example = rand() % n;
+      uint32_t random_example = rand() % data.n;
 
       /* initialize it to be the first center */
-      centers[0] = new ClusterCenter<T>(data.images[random_example], d);
+      centers[0] = new ClusterCenter<T>(data.items[random_example]->data, data.dimension);
       uint16_t current_centers = 1;
 
 
@@ -271,27 +267,27 @@ namespace clustering
       while (current_centers < K)
       {
         /* intialize an array to store all the distances squared of each point to the center */
-        double distances[n] = {0.0};
+        double distances[data.n] = {0.0};
         /* store the sum of all the distances in a variable (it will not overflow, I have checked it) */
         double sum_of_distances = 0.0;
 
         /* compute the min distances D[i] */
-        _compute_distances(distances, &sum_of_distances, current_centers, data, n);
+        _compute_distances(distances, &sum_of_distances, current_centers, data);
 
         /* intialize an array to store all the probabilities of an example being picked as the next center */
-        double probabilities[n] = {0.0};
+        double probabilities[data.n] = {0.0};
         /* store the min probability in a variable */
         double min_probability = 1.0;
 
         /* compute the probability of each data point being picked as the next center */
-        _compute_probabilities(probabilities, &min_probability, distances, sum_of_distances, n);
+        _compute_probabilities(probabilities, &min_probability, distances, sum_of_distances, data.n);
 
         /* create a random uniform (X ~ U(-, 1.0 / min_probability)) double that will be used to pick the new center */
         double random_probability = _random_uniform_double(min_probability);
 
         /* find the next center from the random probability, and create it */
-        uint32_t next_center = _pick_index_from_probability(probabilities, random_probability, n);
-        centers[current_centers] = new ClusterCenter<T>(data.images[next_center], d);
+        uint32_t next_center = _pick_index_from_probability(probabilities, random_probability, data.n);
+        centers[current_centers] = new ClusterCenter<T>(data.items[next_center]->data, data.dimension);
 
         /* increment the number of centers */
         current_centers++;
@@ -311,7 +307,7 @@ namespace clustering
 
 
     /* helper method used to find the closest cluster center to a data point */
-    uint16_t _find_closest_center(T* p)
+    uint16_t _find_closest_center(Item<T>* p)
     {
       /* find the distance to first cluster center */
       uint16_t closest_center = 0;
@@ -334,7 +330,7 @@ namespace clustering
 
 
     /* helper method used to find the closest cluster center to a data point */
-    uint16_t _find_second_closest_center(T* p)
+    uint16_t _find_second_closest_center(Item<T>* p)
     {
       /* variables to keep track of closest centers and their distances */
       uint16_t closest_center = -1;
@@ -385,12 +381,8 @@ namespace clustering
 
 
     /* method that implements Lloyds Algorithm for Clustering */
-    void _Lloyd_Clustering(const interface::Dataset& data)
+    void _Lloyd_Clustering(const interface::Data<T>& data)
     {
-      /* initialize some useful variables */
-      uint32_t n = data.number_of_images;
-      uint32_t dimension = data.rows_per_image * data.columns_per_image;
-
       /* keep a flag that will be used to determine whether a change was made to any cluster center */
       bool center_changed = true;
 
@@ -404,52 +396,52 @@ namespace clustering
         _clear_centers();
 
         /* loop through data points to find the closest cluster senter */
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < data.n; i++)
         {
           /* find the closest cluster center for training example i */
-          uint16_t closest_center = _find_closest_center(data.images[i]);
+          uint16_t closest_center = _find_closest_center(data.items[i]);
 
           /* add data point to the cluster */
-          centers[closest_center]->add_to_cluster(i);
+          centers[closest_center]->add_to_cluster(data.items[i]);
         }
 
         /* compute the new cluster centers */
         for (int c = 0; c < K; c++)
         {
-          centers[c]->compute_new_center_from_data(&center_changed, data);
+          centers[c]->compute_new_center_from_data(&center_changed);
         }
       }
     }
 
 
     /* method that implements Reverse Assignment with LSH Algorithm for Clustering */
-    void _LSH_Clustering(const interface::Dataset& data)
+    void _LSH_Clustering(const interface::Data<T>& data)
     {
 
     }
 
 
     /* method that implements Reverse Assignment with Hypercube Algorithm for Clustering */
-    void _HC_Clustering(const interface::Dataset& data)
+    void _HC_Clustering(const interface::Data<T>& data)
     {
 
     }
 
 
     /* method to compute the silhouette of each data point */
-    void _compute_silhouettes(double* s, const interface::Dataset& data, const uint32_t& n, const uint16_t& dimension)
+    void _compute_silhouettes(double* s, const interface::Data<T>& data)
     {
       /* array to store the average distance of each point to the points in the same cluster */
-      double* a = new double[n];
+      double* a = new double[data.n];
       /* array to store the average distance of each point to the points in the next closest cluster */
-      double* b = new double[n];
+      double* b = new double[data.n];
       /* array used to store the second closest cluster to each datapoint */
-      uint16_t* second_closest_cluster = new uint16_t[n];
+      uint16_t* second_closest_cluster = new uint16_t[data.n];
 
       /* compute the second closest cluster for each data point */
-      for (int i = 0; i < n; i++)
+      for (int i = 0; i < data.n; i++)
       {
-        second_closest_cluster[i] = _find_second_closest_center(data.images[i]);
+        second_closest_cluster[i] = _find_second_closest_center(data.items[i]);
       }
 
 
@@ -464,7 +456,7 @@ namespace clustering
   public:
 
     /* constructor used to build the object */
-    Clustering(const interface::input::clustering::clustering_config& configuration, const interface::Dataset& data):
+    Clustering(const interface::input::clustering::ClusteringConfig& configuration, const interface::Data<T>& data):
     K(configuration.clusters_K), LSH_L(configuration.LSH_L), LSH_k(configuration.LSH_k),
     HC_M(configuration.HC_M), HC_k(configuration.HC_k), HC_probes(configuration.HC_probes)
     {
@@ -495,7 +487,7 @@ namespace clustering
 
 
     /* method to call the correct clustering algorithm */
-    void perform_clustering(const interface::Dataset& data, const std::string& method)
+    void perform_clustering(const interface::Data<T>& data, const std::string& method)
     {
       /* determine which algorithm to use */
       if (method == "Classic")
@@ -526,33 +518,29 @@ namespace clustering
 
 
     /* method used to compute silhouette of a clustering */
-    double compute_average_silhouette(const interface::Dataset& data)
+    double compute_average_silhouette(const interface::Data<T>& data)
     {
-      /* initialize some useful variables */
-      uint32_t n = data.number_of_images;
-      uint32_t dimension = data.rows_per_image * data.columns_per_image;
-
       /* create an array to store the silhouette value of each data point, and after transfer it to the silhouettes vector */
-      double* s = new double[n];
+      double* s = new double[data.n];
 
       /* call internal method to compute the silhouette of each data point */
-      _compute_silhouettes(s, data, n, dimension);
+      _compute_silhouettes(s, data);
 
       /* store the silhouettes in the vector of the class */
-      for (int i = 0; i < n; i++)
+      for (int i = 0; i < data.n; i++)
       {
         silhouettes->push_back(s[i]);
       }
 
       /* compute the sum of all the silhouettes in order to later compute the average */
       double sum = 0.0;
-      for (int i = 0; i < n; i++)
+      for (int i = 0; i < data.n; i++)
       {
         sum += s[i];
       }
 
       /* compute the average silhouette */
-      double average_silhouette = ((double) sum) / n;
+      double average_silhouette = ((double) sum) / data.n;
 
       /* free the silhouettes array */
       delete[] silhouettes;

@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <fstream>
 
-#include "../../include/interfaces/HCUBE_interface.h"
+#include "../../include/interfaces/HC_interface.h"
 
 
 int interface::input::HC::HCParseInput(const int& argc, const char* argv[], interface::input::HC::HCInput& input, interface::IOFiles& files, interface::ExitCode& status)
