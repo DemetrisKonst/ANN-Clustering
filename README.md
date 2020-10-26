@@ -1,1 +1,186 @@
-# ANN-Clustering
+# Project 1: *ANN and Clustering in MNIST digit Dataset*
+
+## Team Members:
+1. Dimitrios Konstantinidis (sdi1700065@di.uoa.gr)
+2. Andreas Spanopoulos (sdi1700146@di.uoa.gr)
+<br> </br>
+
+## A little bit about our work
+In this Project we implement algorithms and data structures that can be used to solve the following 2 problems on any given Dataset:
+
+1. Find *N* Approximate Nearest Neighbors (ANN) for any query point
+2. Group the data points together by performing Clustering
+
+Thus, the Project is split in two parts, the first one solves the (ANN) problem and the second one solves the Clustering problem.
+<br> </br>
+
+## <u> Approximate Nearest Neighbors (ANN) </u>
+ToDo dimitris?????????????????????/
+
+### Locality Sensitive Hashing (LSH)
+ToDo dimitris?????????????????????/
+
+### Projection in Hypercube
+ToDo dimitris?????????????????????/
+<br> </br>
+
+## <u> Clustering </u>
+In this part of the Project we implement the K-medians algorithms via 3 different ways:
+- Lloyds Algorithm
+- Reverse Assignment using Range Search LSH
+- Reverse Assignment using Range Search Hypercube
+
+The centroids are initialized using initialization++ in every algorithm.
+
+Every algorithm consists of the same 2 steps:
+1. Assignment (Expectation): Assign each object to its nearest center.
+2. Update (Maximization): Calculate Mean per cluster and make it new center.
+
+Note that the second step is the same for every algorithm.
+
+### **Lloyds Algorithm**
+Lloyds Algorithm is basically the brute-force approach to the Clustering Problem.
+- In the Assignment step, every data point is compared with every cluster center to find the closest one and assign that point to it.
+- In the update step, for every cluster the new center is computed by taking the average of all the vectors inside that cluster.
+
+### **Reverse Assignment using Range Search LSH**
+The goal behind this algorithm (and the Hypercube version respectively) is to avoid brute-force checking every data point in the assignment step.
+- In the Assignment step, we use Range Search LSH with increasing radius to find the nearby points, until some threshold is achieved. After that, every non-assigned point in the end is then assigned manually by computing the distance to each centroid and taking the minimum.
+- In the update step, as in Lloyds, we compute the mean of all the vectors in a cluster for every cluster, and assign it to the centroid.
+
+### **Reverse Assignment using Range Search Hypercube**
+Again, the steps are pretty much similar.
+- In the Assignment step, we use Range Search Hypercube with increasing radius to find the nearby points, until some threshold is achieved. After that, every non-assigned point in the end is then assigned manually by computing the distance to each centroid and taking the minimum.
+- In the update step, as before, the new centroid is computed by taking the mean of all the vectors inside the cluster.
+<br> </br>
+
+
+## Implementation
+
+### How the Repository is organized
+The main directory contains the entities:
+- [bin](bin): Target directory where binary files (executables) are placed
+- [conf](conf): Directory that contains configuration files for the Clustering Algorithms.
+- [exc1](exc1): Directory that contains the main .cpp files of LSH and Hypercube programs.
+- [exc2](exc2): Directory that contains the main .cpp file of the Clustering program.
+- [include](include): Directory that contains the libraries (.h files) used in both parts of the Project. More on this directory in a bit.
+- [object](object): Directory that contains the Object (compiled) files that are created during compilation.
+- [output](output): Directory that contains output .txt files.
+- [src](src): Directory that contains source code for both parts of the Project. More on it a in a bit.
+- [Makefile](Makefile): A makefile used to build the executables of the Project.
+
+The [include](include) directory contains sub-directories with .h or .hpp files. Their purpose is pretty much self-explanatory. The sub-directories are:
+- [include/BruteForce](include/BruteForce): Contains generic library for running Brute Force algorithm to solve the exact Nearest Neighbors Problem.
+- [include/Clustering](include/Clustering): Contains generic library for the different clustering algorithms.
+- [include/core](include/core): Contains a header that defines a struct for our data points (objects/items).
+- [include/Hypercube](include/Hypercube): Contains a generic library that implements the Hypercube Data structure used in the ANN problem.
+- [include/interfaces](include/interfaces): Contains header files that define the different utilities used to read input/write output, and move around the Data from the Dataset in our programs.
+- [include/LSH](include/LSH): Contains a generic library that implements the LSH Data structure used in the ANN problem.
+- [include/metrics](include/metrics): Contains a generic library used to implement the different metric functions.
+- [include/utils](include/utils): Contains generic libraries with utilities used by other parts of the project.
+
+The [src](src) directory contains sub-directories with .cpp files. Again, their purpose is pretty much self-explanatory. The sub-directories are:
+- [src/interfaces](src/interfaces): Contains implementations of different interface function defined in the respective .h header files.
+<br> </br>
+
+### How ANN is implemented
+ToDo dimitris?????????????????????/
+<br> </br>
+
+### How Clustering is implemented
+The code for the Clustering part can be found in the file [include/Clustering/clustering.hpp](include/Clustering/clustering.hpp). There are 2 objects created in this file:
+1. A struct **ClusterCenter**, used to represent a centroid and the vectors in its cluster.
+2. A class **Clustering**, used to provide and interface between the different methods in the clustering procedure.
+
+In our Dataset, the data points are grayscale images of size 28x28. The images are flattened to an array of size 28 x 28 = 784 pixels (or bytes). Thus, in our case, the vectors contain pixels (unsigned chars == uint8_t), but this can change since we have used templates. 
+
+When the constructor of a Clustering object is called, the centroids get initialized with the method initialization++. After that, we can call the method Clustering::perform_clustering() with the correct parameters to begin one of the clustering algorithms descriven above. Then, we can call the method Clustering::compute_average_silhouette() to compute the Silhouette values from the Clustering that has been produced.
+
+You can take a look at the [main](exc2/ClusterMain.cpp) function for the Clustering, to get a taste of how it works.
+<br> </br>
+
+
+## How to Compile and Run the Code
+
+When compiling the code, the objects will always go in the [object](object) directory, and the executables will go to the [bin](bin) directory.
+
+The are 4 options when compiling the code.
+1. To compile the LSH code:
+    ```bash
+    $ make LSH
+    ```
+    
+2. To compile the Hypercube code:
+
+    ```bash
+    $ make HC
+    ```
+
+3. To compile the Clustering code:
+    ```bash
+    $ make CLUSTER
+    ```
+
+4. To compile all of the above:
+    ```bash
+    $ make
+    ```
+
+Here are some examples on how to run the compiled code:
+
+1. Run the LSH with
+    - d = ./Dataset/train-images-idx3-ubyte, the path to the input file
+    - q = ./Dataset/t10k-images-idx3-ubyte, the path to the query file
+    - k = 6, the number of LSH hash functions
+    - L = 4, the number of HashTables
+    - o = ./output/lsh_output.txt, the path to the output file
+    - N = 10, the number of Approximate Nearest Neighbors to find
+    - R = 10000, the radius used to perform the Range Search LSH
+    ```bash
+    $ ./bin/lsh -d ./Dataset/train-images-idx3-ubyte
+                -q ./Dataset/t10k-images-idx3-ubyte
+                -k 6
+                -L 4
+                -ο ./output/lsh_output.txt
+                -Ν 10
+                -R 10000
+    ```
+
+2. Run the Hypercube with
+    - d = ./Dataset/train-images-idx3-ubyte, the path to the input file
+    - q = ./Dataset/t10k-images-idx3-ubyte, the path to the query file
+    - k = 14, the dimension in which the points will be projected
+    - M = 10, the maximum number of points to check
+    - probes = 2, the number of edges of the hypercube to examine
+    - o = ./output/lsh_output.txt, the path to the output file
+    - N = 10, the number of Approximate Nearest Neighbors to find
+    - R = 10000, the radius used to perform the Range Search LSH
+    ```bash
+    $ ./bin/hypercube -d ./Dataset/train-images-idx3-ubyte
+                      -q ./Dataset/t10k-images-idx3-ubyte
+                      -k 6
+                      -M 10
+                      -probes 2
+                      -ο ./output/lsh_output.txt
+                      -Ν 10
+                      -R 10000
+    ```
+
+3. Run the Clustering with
+    - d = ./Dataset/train-images-idx3-ubyte, the path to the input file
+    - c = ./conf/cluster.conf, the path to the configuration file
+    - o = ./output/lsh_output.txt, the path to the output file
+    - complete, flag given to log more information
+    - m = LSH, the method to perform the Clustering with (Classic, LSH, Hypercube) 
+    ```bash
+    $ ./bin/cluster -d ./Dataset/train-images-idx3-ubyte
+                    -c ./conf/cluster.conf
+                    -ο ./output/lsh_output.txt
+                    -complete
+                    -m LSH
+    ```
+
+To remove the objective and the executable files, just give the command
+```bash
+$ make clean
+```
