@@ -135,3 +135,53 @@ void interface::freeDataset(interface::Dataset& dataset)
   delete[] dataset.images;
   dataset.images = NULL;
 }
+
+
+int interface::output::writeOutput(const std::string& outfile_name, interface::output::KNNOutput& output, interface::ExitCode& status)
+{
+  /* create in ifstream object to open the output file */
+  std::ofstream outfile;
+  outfile.open(outfile_name, std::ios::out | std::ios::trunc);
+
+  /* make sure that the file successfully opened */
+  if (!outfile.is_open())
+  {
+    status = INVALID_OUTFILE_PATH;
+    return 0;
+  }
+
+  /* main loop to write the result for each query in the query set */
+  for (int i = 0; i < output.n; i++)
+  {
+    /* log the number in the query set of the i-th query image */
+    outfile << "Query: " << output.query_id[i] << std::endl;
+
+    /* log info for N Nearest-Neighbors */
+    uint32_t N = output.n_neighbors_id[i].size();
+    for (int j = 0; j < N; j++)
+    {
+      outfile << "Nearest neighbor-" << j + 1 << ": " << output.r_near_neighbors_id[i][j] << std::endl;
+      outfile << "distance" << output.method << ": " << output.approx_distance[i][j] << std::endl;
+      outfile << "distanceTrue: " << output.true_distance[i][j] << std::endl;
+    }
+
+    /* write the info for the execution times */
+    outfile << "t" << output.method << ": " << output.approx_time[i] << std::endl;
+    outfile << "tTrue: " << output.true_time[i] << std::endl;
+
+    /* log information about R-near neighbors */
+    outfile << output.R << "-near neighbors" << std::endl;
+    uint32_t neighbors = output.r_near_neighbors_id.size();
+    for (int j = 0; j < neighbors; j++)
+    {
+      outfile << output.r_near_neighbors_id[i][j] << std::endl;
+    }
+
+    /* put a newline between each query */
+    outfile << std::endl;
+  }
+
+  /* everything is done, close the file and return */
+  outfile.close();
+  return 1;
+}

@@ -92,6 +92,29 @@ namespace interface
   /* function to free up the memory that the dataset used */
   void freeDataset(Dataset& dataset);
 
+
+  /* namespace regarding output utilities */
+  namespace output
+  {
+    /* struct used to group the output data */
+    typedef struct KNNOutput
+    {
+      uint32_t n;
+      double R;
+      std::string method;
+      std::vector<int> query_id;
+      std::vector<std::vector<int>> n_neighbors_id;
+      std::vector<std::vector<double>> approx_distance;
+      std::vector<std::vector<double>> true_distance;
+      std::vector<double> approx_time;
+      std::vector<double> true_time;
+      std::vector<std::vector<int>> r_near_neighbors_id;
+    } KNNOutput;
+
+    /* function to write the output of LSH/HC to a file */
+    int writeOutput(const std::string& outfile_name, KNNOutput& output, ExitCode& status);
+  }
+
 }
 
 

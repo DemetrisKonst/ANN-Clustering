@@ -335,6 +335,8 @@ namespace clustering
   };
 
 
+
+
   /* class used for the implementation of the Clustering algorithms */
   template <typename T>
   class Clustering
@@ -804,7 +806,7 @@ namespace clustering
 
 
     /* method that returns a pointer to a vector that contains the components of each centroid */
-    std::vector<T*> get_centroid_components(void)
+    std::vector<T*> get_centroids_components(void)
     {
       /* create the vector that will be returned */
       std::vector<T*> centroids;
@@ -854,7 +856,7 @@ namespace clustering
       output.d = data.dimension;
       output.method = input.algorithm;
       output.cluster_sizes = get_cluster_sizes();
-      output.centroids = get_centroid_components();
+      output.centroids = get_centroids_components();
       output.clustering_time = clustering_time;
       output.cluster_silhouettes = get_silhouettes();
       output.total_silhouette = silhouette;

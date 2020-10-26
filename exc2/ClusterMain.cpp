@@ -5,7 +5,8 @@
 #include "../include/Clustering/clustering.hpp"
 
 
-int main(int argc, char const *argv[]) {
+int main(int argc, char const *argv[])
+{
 
   /* define the variables */
   interface::ExitCode status;
