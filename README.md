@@ -14,6 +14,11 @@ In this Project we implement algorithms and data structures that can be used to 
 Thus, the Project is split in two parts, the first one solves the (ANN) problem and the second one solves the Clustering problem.
 <br> </br>
 
+## A little bit about our Dataset
+The Datasets used to test the correctness of our algorithms is the *MNIST Database of handwritten digits*, and be found [here](http://yann.lecun.com/exdb/mnist/). This database contains images of size 28 x 28 pixels, that is, 784 pixels if we flatten the image (spoiler alert: we do). The Training set consists of 60000 images, and the test set of 10000. Note that the images are stored in Big-Endian format. Our code makes sure that they are converted to Little-Endian. 
+<br> </br>
+
+
 ## <u> Approximate Nearest Neighbors (ANN) </u>
 ToDo dimitris?????????????????????/
 

@@ -45,11 +45,6 @@ int main(int argc, char const *argv[])
   /////////////////////// SMALLER DATASET ///////////////////////
 
 
-  /* show input */
-  // std::cout << "complete: " << cluster_input.complete << ", method: " << cluster_input.algorithm << std::endl;
-  // std::cout << "\nClusters: " << cluster_config.clusters_K << ", L = " << +cluster_config.LSH_L << ", LSH_k = " << +cluster_config.LSH_k
-  //           << ", HC_M = " << cluster_config.HC_M << ", HC_k = " << +cluster_config.HC_k << ", HC_probes = " << cluster_config.HC_probes << "\n\n";
-
   /* create a Data object that will be used to move around the data */
   interface::Data<uint8_t> data(dataset);
 
