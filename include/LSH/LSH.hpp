@@ -15,40 +15,40 @@ bool comparePairs (std::pair<int, Item<T>*> x, std::pair<int, Item<T>*> y) {
 template <typename T>
 class LSH {
 private:
-  int n;      //number of images
+  int imageCount;      //number of images
   int htSize;
-  int D;      //dimension
-  int k;      //number of hash functions for each amplified hash function
-  int L;      //number of hash tables
-  double r;      //search radius
-  unsigned long int m;
+  int dimension;      //dimension
+  int functionAmount;      //number of hash functions for each amplified hash function
+  int htAmount;      //number of hash tables
+  double searchRadius;      //search radius
+  unsigned long int mConstant;
 
   std::vector<Item<T>*>** H;
   AmplifiedHashFunction<T>** g;
 
 public:
   LSH (interface::input::LSH::LSHInput lshi, interface::Data<T> ds) {
-    k = lshi.k;
-    L = lshi.L;
-    r = lshi.R;
-    n = ds.n;
-    D = ds.dimension;
+    functionAmount = lshi.k;
+    htAmount = lshi.L;
+    searchRadius = lshi.R;
+    imageCount = ds.n;
+    dimension = ds.dimension;
     Item<T>** items = ds.items;
-    m = pow(2, 32) - 5;
+    mConstant = pow(2, 32) - 5;
     int div = 16;
 
-    htSize = n/div;
+    htSize = imageCount/div;
 
-    g = new AmplifiedHashFunction<T>*[L];
-    H = new std::vector<Item<T>*>*[L];
+    g = new AmplifiedHashFunction<T>*[htAmount];
+    H = new std::vector<Item<T>*>*[htAmount];
 
-    int* mmod = new int[D];
-    for (int b = 0; b < D; b++)
-      mmod[b] = utils::modEx(m, D-b-1, pow(2, 32/k));
+    int* mmod = new int[dimension];
+    for (int b = 0; b < dimension; b++)
+      mmod[b] = utils::modEx(mConstant, dimension-b-1, pow(2, 32/functionAmount));
 
 
-    for (int i = 0; i < L; i++) {
-      g[i] = new AmplifiedHashFunction<T>(r, 4, k, D, pow(2, 32) - 5, mmod);
+    for (int i = 0; i < htAmount; i++) {
+      g[i] = new AmplifiedHashFunction<T>(searchRadius, 4, functionAmount, dimension, mmod);
 
       H[i] = new std::vector<Item<T>*>[htSize];
       for (int j = 0; j < htSize; j++) {
@@ -57,8 +57,8 @@ public:
       }
     }
 
-    for (int a = 0; a < n; a++) {
-      for (int i = 0; i < L; i++) {
+    for (int a = 0; a < imageCount; a++) {
+      for (int i = 0; i < htAmount; i++) {
         unsigned long int gres = g[i]->HashVector(items[a]->data);
         H[i][gres%htSize].push_back(items[a]);
       }
@@ -75,19 +75,19 @@ public:
       d.push_back(std::make_pair(std::numeric_limits<int>::max(), new Item<T>()));
 
     int itemsSearched = 0;
-    for (int i = 0; i < L; i++) {
+    for (int i = 0; i < htAmount; i++) {
       int bucket = g[i]->HashVector(query)%htSize;
 
       for (int j = 0; j < H[i][bucket].size(); j++) {
         bool alreadyExists = false;
-        for (int k = 0; k < N; k++)
-          if (d[k].second->id == H[i][bucket][j]->id)
+        for (int a = 0; a < N; a++)
+          if (d[a].second->id == H[i][bucket][j]->id)
             alreadyExists = true;
 
         if (alreadyExists)
           continue;
 
-        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j]->data, D);
+        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j]->data, dimension);
 
         if (distance < d[N-1].first) {
           d[N-1].first = distance;
@@ -107,19 +107,19 @@ public:
     std::vector<std::pair<int, Item<T>*>> d;
 
     int itemsSearched = 0;
-    for (int i = 0; i < L; i++) {
+    for (int i = 0; i < htAmount; i++) {
       int bucket = g[i]->HashVector(query)%htSize;
 
       for (int j = 0; j < H[i][bucket].size(); j++) {
         bool alreadyExists = false;
-        for (int k = 0; k < d.size(); k++)
-          if (d[k].second->id == H[i][bucket][j]->id)
+        for (int a = 0; a < d.size(); a++)
+          if (d[a].second->id == H[i][bucket][j]->id)
             alreadyExists = true;
 
         if (alreadyExists || H[i][bucket][j]->marked)
           continue;
 
-        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j]->data, D);
+        int distance = metrics::ManhattanDistance<T>(query, H[i][bucket][j]->data, dimension);
 
         if (distance < radius) {
           std::pair<int, Item<T>*> tmpPair = std::make_pair(distance, H[i][bucket][j]);
@@ -132,5 +132,12 @@ public:
     }
 
     return d;
+  }
+
+  void buildOutput (interface::output::KNNOutput& output, const interface::Data<T>& queryData) {
+    output.n = queryData.n;
+    output.R = 0;
+    output.method = "LSH";
+    
   }
 };

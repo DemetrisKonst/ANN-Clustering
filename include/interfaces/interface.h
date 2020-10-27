@@ -102,13 +102,13 @@ namespace interface
       uint32_t n;
       double R;
       std::string method;
-      std::vector<int> query_id;
-      std::vector<std::vector<int>> n_neighbors_id;
-      std::vector<std::vector<double>> approx_distance;
-      std::vector<std::vector<double>> true_distance;
-      std::vector<double> approx_time;
+      std::vector<int> query_id;    // item id
+      std::vector<std::vector<int>> n_neighbors_id;     // knn neighbors item id
+      std::vector<std::vector<double>> approx_distance; // knn distance
+      std::vector<std::vector<double>> true_distance;   // real distance
+      std::vector<double> approx_time;  //time to complete kNN for 1 query
       std::vector<double> true_time;
-      std::vector<std::vector<int>> r_near_neighbors_id;
+      std::vector<std::vector<int>> r_near_neighbors_id; // item id of range search neighbors
     } KNNOutput;
 
     /* function to write the output of LSH/HC to a file */
