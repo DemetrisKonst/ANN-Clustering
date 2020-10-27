@@ -4,70 +4,52 @@
 #include <random>
 #include <algorithm>
 
-// #include "../core/item.hpp"
 #include "../utils/numbers.hpp"
 
 template <typename T>
 class HashFunction {
   double searchRadius;      //search radius given by user
-  int c;                    // constant to get W = c*searchRadius
-  int k;                    // number of H functions for g
-  int D;                    // dimension
-  int W;                    // W = c*searchRadius >> searchRadius
-  unsigned long int m;
-  int M;
+  int windowConstant;       // constant to get window = windowConstant*searchRadius
+  int functionAmount;                    // number of H functions for g
+  int dimension;                    // dimension
+  int window;               // window = windowConstant*searchRadius >> searchRadius
+  int modularConstant;      // modularConstant = 2^(32/functionAmount)
 
-  int* s;
-  int* mmod;
+  int* randomShift;
+  int* mmodM_values;
 
 public:
-  HashFunction (double sr, int c, int k, int d, unsigned long int m) : searchRadius(sr), c(c), k(k), D(d), m(m) {
-    W = c*searchRadius;
-    M = pow(2, 32/k);
+  HashFunction (double sr, int c, int k, int d, int* mmod):
+  searchRadius(sr), windowConstant(c), functionAmount(k), dimension(d), mmodM_values(mmod) {
+    window = windowConstant*searchRadius;
+    modularConstant = pow(2, 32/functionAmount);
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     std::default_random_engine generator(seed);
-    std::uniform_int_distribution<int> distribution(0, W);
+    std::uniform_int_distribution<int> distribution(0, window);
 
-    s = new int[D];
-    mmod = new int[D];
+    randomShift = new int[dimension];
 
-    for (int i = 0; i < D; i++){
-      s[i] = distribution(generator);
-      mmod[i] = utils::modEx(m, D-i-1, M);
-    }
-  }
-
-  HashFunction (double sr, int c, int k, int d, unsigned long int m, int* mmod) : searchRadius(sr), c(c), k(k), D(d), m(m), mmod(mmod) {
-    W = c*searchRadius;
-    M = pow(2, 32/k);
-
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine generator(seed);
-    std::uniform_int_distribution<int> distribution(0, W);
-
-    s = new int[D];
-
-    for (int i = 0; i < D; i++){
-      s[i] = distribution(generator);
+    for (int i = 0; i < dimension; i++){
+      randomShift[i] = distribution(generator);
     }
   }
 
   int HashVector (T* x) {
-    std::vector<int> a;   // vector storing floor((Xi-Si)/W)
+    std::vector<int> a;   // vector storing floor((Xi-Si)/window)
 
     unsigned long long int sum = 0;
 
-    for (int i = 0; i < D; i++) {
-      a.push_back(floor((x[i]-s[i])*1.0/W));
+    for (int i = 0; i < dimension; i++) {
+      a.push_back(floor((x[i]-randomShift[i])*1.0/window));
 
-      int amodm = a[i]%M;
-      int resmodm = (amodm * mmod[i])%M;
+      int amodm = a[i]%modularConstant;
+      int resmodm = (amodm * mmodM_values[i])%modularConstant;
 
       sum += resmodm;
     }
 
-    return sum%M;
+    return sum%modularConstant;
   }
 };
 
@@ -76,41 +58,25 @@ class AmplifiedHashFunction {
 private:
   std::vector<HashFunction<T>> H;
   double searchRadius;
-  int c;            // constant to get W = c*searchRadius
-  int k;            // number of H functions for g
-  int D;            // dimension
-  int W;
-  unsigned long int m;
-  int M;
+  int windowConstant;            // constant to get window = windowConstant*searchRadius
+  int functionAmount;            // number of H functions for g
+  int dimension;            // dimension
+  int window;
 
 public:
-  // AmplifiedHashFunction (double sr, int c, int k, int d, unsigned long int m) : searchRadius(sr), c(c), k(k), D(d), m(m)  {
-  //   W = c*searchRadius;
-  //   M = pow(2, 32/k);
-  //
-  //   int* mmod = new int[d];
-  //
-  //   for (int i = 0; i < D; i++)
-  //     mmod[i] = utils::modEx(m, D-i-1, M);
-  //
-  //   for (int i = 0; i < k; i++) {
-  //     H.push_back(HashFunction(sr, c, k, d, m, mmod));
-  //   }
-  // }
+  AmplifiedHashFunction (double sr, int c, int k, int d, int* mmod):
+  searchRadius(sr), windowConstant(c), functionAmount(k), dimension(d){
+    window = windowConstant*searchRadius;
 
-  AmplifiedHashFunction (double sr, int c, int k, int d, unsigned long int m, int* mmod) : searchRadius(sr), c(c), k(k), D(d), m(m)  {
-    W = c*searchRadius;
-    M = pow(2, 32/k);
-
-    for (int i = 0; i < k; i++) {
-      H.push_back(HashFunction<T>(sr, c, k, d, m, mmod));
+    for (int i = 0; i < functionAmount; i++) {
+      H.push_back(HashFunction<T>(sr, windowConstant, functionAmount, d, mmod));
     }
   }
 
   unsigned long int HashVector (T* x) {
     std::vector<uint8_t> hValues;
 
-    for (int i = 0; i < k; i++) {
+    for (int i = 0; i < functionAmount; i++) {
       hValues.push_back(H[i].HashVector(x));
     }
 
