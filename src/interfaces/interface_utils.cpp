@@ -214,7 +214,7 @@ void interface::output::PrintErrorMessageAndExit(const interface::ExitCode& code
     }
     case CONFIG_INVALID_CLUSTERS:
     {
-      std::cerr << "ERROR: The value of the number of clusters K is invalid.\nIt should be a positive integer, smaller than 256.\n";
+      std::cerr << "ERROR: The value of the number of clusters K is invalid.\nIt should be a positive integer, greater than 1 and smaller than 256.\n";
       break;
     }
     case CONFIG_NO_CLUSTERS:

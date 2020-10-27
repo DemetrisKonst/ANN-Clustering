@@ -159,7 +159,7 @@ int interface::input::clustering::ClusteringParseConfigFile(const std::string& f
   {
     int value_as_int = stoi(matches.str(1));
     /* check for the correct range of values */
-    if (value_as_int <= 0 || value_as_int >= 256)
+    if (value_as_int <= 1 || value_as_int >= 256)
     {
       status = CONFIG_INVALID_CLUSTERS;
       return 0;

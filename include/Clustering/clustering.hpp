@@ -7,10 +7,14 @@
 #include <cstdlib>
 #include <vector>
 #include <random>
+#include <chrono>
+#include <algorithm>
+#include <functional>
 
 #include "../interfaces/clustering_interface.h"
 #include "../metrics/metrics.hpp"
 #include "../core/item.hpp"
+#include "../utils/cluster.hpp"
 
 
 /* namespace used to implement clustering algorithms */
@@ -108,19 +112,21 @@ namespace clustering
       /* loop to compute each component of the new center */
       for (int d = 0; d < dimension; d++)
       {
-        /* sum of d component of data points in the cluster */
-        double sum = 0.0;
+        /* vector that will contain the value of d-th dimension for each data point in the cluster */
+        std::vector<T> d_dimension;
 
         /* iterate through the data points in the same cluster */
         for (int i = 0; i < vectors_in_cluster->size(); i++)
         {
           /* add the d-th component of the i-th data point */
           Item<T>* item = (*vectors_in_cluster)[i];
-          sum += item->data[d];
+          d_dimension.push_back(item->data[d]);
         }
 
-        /* compute the new value and assign it to the center */
-        double new_value = ((double) sum) / vectors_in_cluster->size();
+        /* compute the new value for this component by finding the median value */
+        std::nth_element(d_dimension.begin(), d_dimension.begin() + d_dimension.size() / 2, d_dimension.end());
+        T new_value = d_dimension[d_dimension.size() / 2];
+        // utils::order_statistics(d_dimension, d_dimension.size(), d_dimension.size() / 2 + d_dimension.size() % 2);
         new_center[d] = new_value;
 
         /* check whether a component has changed its value */
@@ -354,46 +360,6 @@ namespace clustering
     std::vector<double>* silhouettes;
 
 
-    /* helper method that returns a random uniformly distributed double in the range [0, 1] */
-    double _random_uniform_double(const double& min_probability)
-    {
-      /* find the inverse of the min probability: we need it to make sure that every example has even the slightest chance of being picked */
-      int inverse_min_probability = 1.0 / min_probability;
-
-      /* get a random number (RAND_MAX is defined high) */
-      int number = rand();
-
-      /* compute the probability and return it */
-      double prob = ((number % inverse_min_probability) + 1.0) / inverse_min_probability;
-      return prob;
-    }
-
-
-    /* helper methods that selects an index from a probability matrix */
-    uint32_t _pick_index_from_probability(const double probabilities[], const double& random_probability, const uint16_t& n)
-    {
-      /* check the corner case to avoid computations */
-      if (random_probability == 1)
-      {
-        return n - 1;
-      }
-
-      /* use variables to locate the wanted probability */
-      double current_probability = probabilities[0];
-      uint16_t current_index = 0;
-
-      /* perform a loop to increment the sum of probabilities until we reach the wanted value */
-      while (current_probability < random_probability && current_index < n)
-      {
-        current_index++;
-        current_probability += probabilities[current_index];
-      }
-
-      /* return the value found */
-      return current_index;
-    }
-
-
     /* helper method to compute the min distances of each data point to any center */
     void _compute_distances(double* distances, double* sum_of_distances, const uint16_t& current_centers, const interface::Data<T>& data)
     {
@@ -422,21 +388,6 @@ namespace clustering
     }
 
 
-    /* helper method to compute the probabilities of any data point being picked as the next center */
-    void _compute_probabilities(double* probabilities, double* min_probability, const double* distances, const double& sum_of_distances, const uint32_t& n)
-    {
-      /* loop to assign a probability to each data point */
-      for (int i = 0; i < n; i++)
-      {
-        probabilities[i] = distances[i] / sum_of_distances;
-        if (probabilities[i] < *min_probability && probabilities[i] != 0)
-        {
-          *min_probability = probabilities[i];
-        }
-      }
-    }
-
-
     /* method that implements intialization++ */
     void _initialize_centers(const interface::Data<T>& data)
     {
@@ -457,7 +408,7 @@ namespace clustering
         /* store the sum of all the distances in a variable (it will not overflow, I have checked it) */
         double sum_of_distances = 0.0;
 
-        /* compute the min distances D[i] */
+        /* compute the min distances D[i] for each data point i */
         _compute_distances(distances, &sum_of_distances, current_centers, data);
 
         /* intialize an array to store all the probabilities of an example being picked as the next center */
@@ -466,13 +417,13 @@ namespace clustering
         double min_probability = 1.0;
 
         /* compute the probability of each data point being picked as the next center */
-        _compute_probabilities(probabilities, &min_probability, distances, sum_of_distances, data.n);
+        utils::compute_probabilities(probabilities, &min_probability, distances, sum_of_distances, data.n);
 
         /* create a random uniform (X ~ U(-, 1.0 / min_probability)) double that will be used to pick the new center */
-        double random_probability = _random_uniform_double(min_probability);
+        double random_probability = utils::random_uniform_double(min_probability);
 
         /* find the next center from the random probability, and create it */
-        uint32_t next_center = _pick_index_from_probability(probabilities, random_probability, data.n);
+        uint32_t next_center = utils::pick_index_from_probability(probabilities, random_probability, data.n);
         centers[current_centers] = new ClusterCenter<T>(data.items[next_center]->data, data.dimension);
 
         /* increment the number of centers */
@@ -488,6 +439,20 @@ namespace clustering
       for (int i = 0; i < K; i++)
       {
         centers[i]->clear_cluster_center();
+      }
+    }
+
+
+    /* method that unmarks all data points */
+    void _unmark_data_points(const interface::Data<T>& data)
+    {
+      /* for each data point */
+      for (int i = 0; i < data.n; i++)
+      {
+        /* get the item */
+        Item<T>* item = data.items[i];
+        /* set it to unmarked */
+        item->marked = false;
       }
     }
 
@@ -567,50 +532,52 @@ namespace clustering
 
 
     /* method that implements Lloyds Algorithm for Clustering */
-    void _Lloyd_Clustering(const interface::Data<T>& data)
+    void _Lloyd_Assignment(const interface::Data<T>& data)
     {
-      /* keep a flag that will be used to determine whether a change was made to any cluster center */
-      bool center_changed = true;
-
-      /* keep iterating while there are changed made in the cluster centers */
-      while (center_changed)
+      /* loop through data points to find the closest cluster senter */
+      for (int i = 0; i < data.n; i++)
       {
-        /* set the flag to false, so that it gets set to true only if a change is made */
-        center_changed = false;
+        /* get the item */
+        Item<T>* item = data.items[i];
 
-        /* first remove the "assignment" of data points in the cluster centers */
-        _clear_centers();
-
-        /* loop through data points to find the closest cluster senter */
-        for (int i = 0; i < data.n; i++)
+        /* if it is not marked, assign it to a cluster */
+        if (!item->marked)
         {
           /* find the closest cluster center for training example i */
-          uint16_t closest_center = _find_closest_center(data.items[i]);
+          uint16_t closest_center = _find_closest_center(item);
 
           /* add data point to the cluster */
-          centers[closest_center]->add_to_cluster(data.items[i]);
-        }
+          centers[closest_center]->add_to_cluster(item);
 
-        /* compute the new cluster centers */
-        for (int c = 0; c < K; c++)
-        {
-          centers[c]->compute_new_center_from_data(&center_changed);
+          /* mark it */
+          item->marked = true;
         }
       }
     }
 
 
     /* method that implements Reverse Assignment with LSH Algorithm for Clustering */
-    void _LSH_Clustering(const interface::Data<T>& data)
+    void _LSH_Assignment(const interface::Data<T>& data)
     {
 
     }
 
 
     /* method that implements Reverse Assignment with Hypercube Algorithm for Clustering */
-    void _HC_Clustering(const interface::Data<T>& data)
+    void _HC_Assignment(const interface::Data<T>& data)
     {
 
+    }
+
+
+    /* method that performs the update step in the clustering procedure */
+    void _update_step(bool* center_changed)
+    {
+      /* compute the new cluster centers */
+      for (int c = 0; c < K; c++)
+      {
+        centers[c]->compute_new_center_from_data(center_changed);
+      }
     }
 
 
@@ -699,26 +666,50 @@ namespace clustering
 
 
     /* method to call the correct clustering algorithm */
-    void perform_clustering(const interface::Data<T>& data, const std::string& method)
+    void perform_clustering(const interface::Data<T>& data, const std::string& method, double* duration)
     {
-      /* determine which algorithm to use */
-      if (method == "Classic")
+      /* keep a flag that will be used to determine whether a change was made to any cluster center */
+      bool center_changed = true;
+
+      /* variable used to remeber the start of the execution time */
+      auto start = std::chrono::high_resolution_clock::now();
+
+
+      /* keep iterating while there are changed made in the cluster centers */
+      while (center_changed)
       {
-        _Lloyd_Clustering(data);
+        /* set the flag to false, so that it gets set to true only if a change is made */
+        center_changed = false;
+
+        /* first remove the "assignment" of data points in the cluster centers */
+        _clear_centers();
+
+        /* unmark all data point */
+        _unmark_data_points(data);
+
+        /* determine which algorithm to use in the assignment step */
+        if (method == "Classic")
+        {
+          _Lloyd_Assignment(data);
+        }
+        else if (method == "LSH")
+        {
+          _LSH_Assignment(data);
+        }
+        else
+        {
+          _HC_Assignment(data);
+        }
+
+        /* now the update step: find new centroids */
+        _update_step(&center_changed);
       }
-      else if (method == "LSH")
-      {
-        _LSH_Clustering(data);
-      }
-      else if (method == "Hypercube")
-      {
-        _HC_Clustering(data);
-      }
-      else
-      {
-        std::cout << "ELOUSA\n";
-        exit(EXIT_FAILURE);
-      }
+
+      /* variable used to mark the end of execution */
+      auto end = std::chrono::high_resolution_clock::now();
+
+      /* compute the time it took for the clustering */
+      *duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     }
 
 
@@ -839,15 +830,6 @@ namespace clustering
     }
 
 
-    /* method that frees the memory which the get_items_per_cluster() created */
-    void free_output_object_memory(interface::output::clustering::ClusteringOutput& output)
-    {
-      /* delete the arrays */
-      delete[] output.cluster_silhouettes;
-      delete[] output.items;
-    }
-
-
     /* method used to build the output object that will be "written" in the outfile */
     void build_output(interface::output::clustering::ClusteringOutput& output, const interface::Data<T>& data, interface::input::clustering::ClusteringInput& input, const double& clustering_time)
     {
@@ -864,6 +846,14 @@ namespace clustering
       output.items = get_items_per_cluster();
     }
 
+
+    /* method that frees the memory which the get_items_per_cluster() created */
+    void free_output_object_memory(interface::output::clustering::ClusteringOutput& output)
+    {
+      /* delete the arrays */
+      delete[] output.cluster_silhouettes;
+      delete[] output.items;
+    }
   };
 }
 
