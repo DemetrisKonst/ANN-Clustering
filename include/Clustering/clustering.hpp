@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <functional>
 #include <utility>
+#include <unordered_map>
 
 #include "../interfaces/clustering_interface.h"
 #include "../interfaces/LSH_interface.h"
@@ -107,7 +108,7 @@ namespace clustering
     }
 
 
-    /* method used to compute the new cluster center from the data points in the cluter; returns true if the center changes; else false */
+    /* method used to compute the new cluster center from the data points in the cluster; returns true if the center changes; else false */
     void compute_new_center_from_data(bool* center_changed)
     {
       /* create the new center */
@@ -618,11 +619,14 @@ namespace clustering
       /* keep iterating (doubling the radius and performing range search) until stopping conditions are met */
       do
       {
+        /* create a vector to temporarily store the assigned cluster for each data point in order to resolve conflicts */
+        std::unordered_map<uint32_t, std::pair<uint16_t, Item<T>*>> assigned_clusters;
+
         /* reset the number *balls* that got points */
         balls_changed = 0;
 
         /* for each cluster */
-        for (int c = 0; c < K; c++)
+        for (uint16_t c = 0; c < K; c++)
         {
           /* define a variable to store the result of the Range Search */
           std::vector<std::pair<int, Item<T>*>> ret;
@@ -636,7 +640,7 @@ namespace clustering
           else
           {
             /* perform range search */
-            ret = hypercube->RangeSearch(centers[c]->get_components(), radius);
+            ret = hypercube->RangeSearch(centers[c]->get_components(), radius, HC_probes, 15000);
           }
 
           /* if this ball gets at least one point, increment the counter */
@@ -648,10 +652,59 @@ namespace clustering
           /* add the items of the range search to the cluster */
           for (int i = 0; i < ret.size(); i++)
           {
-            centers[c]->add_to_cluster(ret[i].second);
-            ret[i].second->marked = true;
+            /* get the item as a variable to make code more readable */
+            Item<T>* item = ret[i].second;
+
+            /* if the item is not staged */
+            if (!item->staged)
+            {
+              /* make it staged because it was found by this query search */
+              item->staged = true;
+              /* create a pair with (cluster, item) in order to assign it to the cluster */
+              std::pair<uint16_t, Item<T>*> pair = std::make_pair(c, item);
+              /* assign it temporarily to the current cluster */
+              assigned_clusters[item->id] = pair;
+            }
+            /* else, the item as already staged, so we have to resolve a confict */
+            else
+            {
+              /* get the cluster that was closer so far */
+              uint16_t closest_cluster_so_far = assigned_clusters[item->id].first;
+              /* compute the distance to it */
+              double distance_to_previous_cluster = (double) metrics::ManhattanDistance(item->data, centers[closest_cluster_so_far]->get_components(), data.dimension);
+              /* compute the distance to the current cluster */
+              double distance_to_current_cluster = (double) metrics::ManhattanDistance(item->data, centers[c]->get_components(), data.dimension);
+
+              /* if the distance to the current cluster is smaller that the distance to the previously closest */
+              if (distance_to_current_cluster < distance_to_previous_cluster)
+              {
+                /* create a pair with (cluster, item) in order to assign it to the cluster */
+                std::pair<uint16_t, Item<T>*> pair = std::make_pair(c, item);
+                /* assign this item to the current cluster since its closer */
+                assigned_clusters[item->id] = pair;
+              }
+            }
+
           }
 
+        }
+
+        /* traverse the unordered map, */
+        for (auto x : assigned_clusters)
+        {
+          /* get the value of the specific key in the unordered map */
+          std::pair<uint16_t, Item<T>*> pair = x.second;
+          /* get the closest cluster found */
+          uint16_t closest_cluster = pair.first;
+          /* get the item */
+          Item<T>* item = pair.second;
+
+          /* unstage the item */
+          item->staged = false;
+          /* mark the item because it will be added in a cluster */
+          item->marked = true;
+          /* assign point to its closest luster */
+          centers[closest_cluster]->add_to_cluster(item);
         }
 
         /* double the radius */
@@ -659,6 +712,9 @@ namespace clustering
 
         /* increment the number of iterations */
         iterations++;
+
+        /* remove "the assignment" of each data point as the iteration has ended */
+        assigned_clusters.clear();
 
         /* until 80% of balls get new points, and max_iterations have been perfomed at least */
       } while (balls_changed >= K * 0.2 || iterations < max_iterations);
@@ -789,6 +845,7 @@ namespace clustering
         _initialize_data_structures(data, method);
       }
 
+      int iterations = 0;
 
       /* keep iterating while there are changed made in the cluster centers */
       while (center_changed)
@@ -816,6 +873,9 @@ namespace clustering
 
         /* now the update step: find new centroids */
         _update_step(&center_changed);
+
+        iterations++;
+        std::cout << "iterations = " << iterations << '\n';
       }
 
       /* variable used to mark the end of execution */
