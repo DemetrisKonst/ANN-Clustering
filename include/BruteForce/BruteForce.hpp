@@ -1,41 +1,65 @@
 #include <utility>
 #include <limits>
 
+#include "../core/item.hpp"
 #include "../metrics/metrics.hpp"
+#include "../utils/lsh_hc.hpp"
 
 template <typename T>
 class BruteForce {
 private:
-  T** data;
-  int N;
-  int D;
+  int imageCount;
+  int dimension;
+  Item<T>** items;
 
 public:
-  BruteForce (int n, int d, T** data) : data(data), N(n), D(d) {}
+  BruteForce (interface::Data<T>& ds) {
+    imageCount = ds.n;
+    dimension = ds.dimension;
+    items = ds.items;
+  }
 
-  std::pair<int, T*> NearestNeighbor (T* query) {
-    int b = std::numeric_limits<int>::max();
-    T* d = NULL;
+  std::vector<std::pair<int, Item<T>*>> kNN (T* query, int N, int thresh = 0) {
+    std::vector<std::pair<int, Item<T>*>> d;
 
-    for (int i = 0; i < N; i++) {
-      int distance = metrics::ManhattanDistance<T>(data[i], query, D);
+    for (int i = 0; i < N; i++)
+      d.push_back(std::make_pair(std::numeric_limits<int>::max(), new Item<T>()));
 
-      if (distance < b) {
-        b = distance;
-        d = data[i];
+
+    for (int i = 0; i < imageCount; i++) {
+      int distance = metrics::ManhattanDistance<T>(query, items[i]->data, dimension);
+
+      if (distance < d[N-1].first) {
+        d[N-1].first = distance;
+        d[N-1].second = items[i];
+        std::sort(d.begin(), d.end(), comparePairs<T>);
       }
+
+      if (thresh != 0 && i >= thresh)
+        return d;
     }
 
-    return std::make_pair(b, d);
+    return d;
   }
 
   std::pair<int, T*> RangeSearch (T* query, double radius) {
-    for (int i = 0; i < N; i++) {
-      int distance = metrics::ManhattanDistance<T>(data[i], query, D);
+    for (int i = 0; i < imageCount; i++) {
+      int distance = metrics::ManhattanDistance<T>(items[i]->data, query, dimension);
 
       if (distance < radius) {
-        return std::make_pair(distance, data[i]);
+        return std::make_pair(distance, items[i]);
       }
     }
+  }
+
+  std::vector<std::vector<std::pair<int, Item<T>*>>> buildOutput (interface::Dataset& query, int N, int thresh = 0) {
+    std::vector<std::vector<std::pair<int, Item<T>*>>> bfVec;
+
+    for (int i = 0; i < query.number_of_images; i++) {
+      std::vector<std::pair<int, Item<T>*>> kNNRes = kNN(query.images[i], N, thresh);
+      bfVec.push_back(kNNRes);
+    }
+
+    return bfVec;
   }
 };

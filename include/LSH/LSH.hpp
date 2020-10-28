@@ -6,11 +6,7 @@
 #include "../core/item.hpp"
 #include "LSHFun.hpp"
 #include "../metrics/metrics.hpp"
-
-template <typename T>
-bool comparePairs (std::pair<int, Item<T>*> x, std::pair<int, Item<T>*> y) {
-  return (x.first < y.first);
-}
+#include "../utils/lsh_hc.hpp"
 
 template <typename T>
 class LSH {
@@ -27,7 +23,7 @@ private:
   AmplifiedHashFunction<T>** g;
 
 public:
-  LSH (interface::input::LSH::LSHInput lshi, interface::Data<T> ds) {
+  LSH (interface::input::LSH::LSHInput& lshi, interface::Data<T>& ds) {
     functionAmount = lshi.k;
     htAmount = lshi.L;
     searchRadius = lshi.R;
@@ -68,7 +64,7 @@ public:
     }
   }
 
-  std::vector<std::pair<int, Item<T>*>> ApproxNN (T* query, int N, int thresh = 0) {
+  std::vector<std::pair<int, Item<T>*>> kNN (T* query, int N, int thresh = 0) {
     std::vector<std::pair<int, Item<T>*>> d;
 
     for (int i = 0; i < N; i++)
@@ -134,10 +130,13 @@ public:
     return d;
   }
 
-  void buildOutput (interface::output::KNNOutput& output, const interface::Data<T>& queryData) {
-    output.n = queryData.n;
-    output.R = 0;
-    output.method = "LSH";
-    
+  std::vector<std::vector<std::pair<int, Item<T>*>>> buildOutput (interface::Dataset& query, int N, int thresh = 0) {
+    std::vector<std::vector<std::pair<int, Item<T>*>>> LSHVec;
+
+    for (int i = 0; i < query.number_of_images; i++) {
+      LSHVec.push_back(kNN(query.images[i], N, thresh));
+    }
+
+    return LSHVec;
   }
 };

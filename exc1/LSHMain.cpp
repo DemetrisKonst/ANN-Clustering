@@ -3,10 +3,8 @@
 #include <utility>
 
 #include "../include/interfaces/LSH_interface.h"
-
-#include "../include/LSH/LSH.hpp"
 #include "../include/BruteForce/BruteForce.hpp"
-
+#include "../include/LSH/LSH.hpp"
 
 int main(int argc, char const *argv[]) {
 
@@ -25,28 +23,26 @@ int main(int argc, char const *argv[]) {
   int ret3 = interface::ParseDataset(files.input_file, dataset);
   interface::Data<uint8_t> data(dataset);
 
-  // LSH<uint8_t> lshmain = LSH<uint8_t>(data.number_of_images, 16, 28*28, lsh_input.k, lsh_input.L, lsh_input.R, pow(2,32)-5, data.images);
-  LSH<uint8_t> lshmain = LSH<uint8_t>(lsh_input, data);
-
-  /* parse query set */
   int ret4 = interface::ParseDataset(files.query_file, queries);
 
-  for (int i = 0; i < 5; i++) {
-    std::vector<std::pair<int, Item<uint8_t>*>> kNNRes = lshmain.ApproxNN(queries.images[i], lsh_input.N);
+  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-    std::cout << "----" << i << "----" << '\n';
-    for (int j = 0; j < kNNRes.size(); j++) {
-      std::cout << j << "th Distance - ApproxNN " << kNNRes[j].first << ", Item -> " << kNNRes[j].second->id << '\n';
-    }
+  BruteForce<uint8_t> bf = BruteForce<uint8_t>(data);
+  std::vector<std::vector<std::pair<int, Item<uint8_t>*>>> bfOutput = bf.buildOutput(queries, lsh_input.N);
 
-    std::vector<std::pair<int, Item<uint8_t>*>> rsRes = lshmain.RangeSearch(queries.images[i], lsh_input.R);
+  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+  std::cout << "BF Time = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
 
-    std::cout << "----" << i << "----" << '\n';
-    for (int j = 0; j < rsRes.size(); j++) {
-      std::cout << j << "th Distance - RangeSearch" << rsRes[j].first  << ", Item -> " << kNNRes[j].second->id << '\n';
-    }
 
-  }
+  begin = std::chrono::steady_clock::now();
+
+  LSH<uint8_t> lsh = LSH<uint8_t>(lsh_input, data);
+  std::vector<std::vector<std::pair<int, Item<uint8_t>*>>> lshOutput = lsh.buildOutput(queries, lsh_input.N);
+
+  end = std::chrono::steady_clock::now();
+  std::cout << "LSH Time = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+
+  interface::output::
 
   return 0;
 }

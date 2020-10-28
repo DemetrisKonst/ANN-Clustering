@@ -4,11 +4,7 @@
 #include "../LSH/LSHFun.hpp"
 #include "../metrics/metrics.hpp"
 #include "../interfaces/HC_interface.h"
-
-template <typename T>
-bool comparePairs (std::pair<int, Item<T>*> x, std::pair<int, Item<T>*> y) {
-  return (x.first < y.first);
-}
+#include "../utils/lsh_hc.hpp"
 
 template <typename T>
 class Hypercube {
@@ -23,7 +19,7 @@ private:
 
   std::vector<Item<T>*>* H;
 public:
-  Hypercube(interface::input::HC::HCInput hci, interface::Data<T> ds) {
+  Hypercube(interface::input::HC::HCInput& hci, interface::Data<T>& ds) {
     HCdim = hci.k;
     searchRadius = hci.R;
     n = ds.n;
@@ -101,7 +97,7 @@ public:
     return probeVec;
   }
 
-  std::vector<std::pair<int, Item<T>*>> ApproxNN (T* query, int N, int probes, int thresh) {
+  std::vector<std::pair<int, Item<T>*>> kNN (T* query, int N, int probes, int thresh) {
     std::vector<std::pair<int, Item<T>*>> d;
 
     for (int i = 0; i < N; i++)
@@ -154,5 +150,15 @@ public:
     }
 
     return d;
+  }
+
+  std::vector<std::vector<std::pair<int, Item<T>*>>> buildOutput (T** query, int N, int probes, int thresh = 0) {
+    std::vector<std::vector<std::pair<int, Item<T>*>>> hcVec;
+
+    for (int i = 0; i < query.number_of_images; i++) {
+      hcVec.push_back(kNN(query[i], N, probes, thresh));
+    }
+
+    return hcVec;
   }
 };
