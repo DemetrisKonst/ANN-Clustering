@@ -3,10 +3,8 @@
 #include <utility>
 
 #include "../include/interfaces/LSH_interface.h"
-
-#include "../include/LSH/LSH.hpp"
 #include "../include/BruteForce/BruteForce.hpp"
-
+#include "../include/LSH/LSH.hpp"
 
 int main(int argc, char const *argv[]) {
 
@@ -25,28 +23,26 @@ int main(int argc, char const *argv[]) {
   int ret3 = interface::ParseDataset(files.input_file, dataset);
   interface::Data<uint8_t> data(dataset);
 
-  // LSH<uint8_t> lshmain = LSH<uint8_t>(data.number_of_images, 16, 28*28, lsh_input.k, lsh_input.L, lsh_input.R, pow(2,32)-5, data.images);
-  LSH<uint8_t> lshmain = LSH<uint8_t>(lsh_input, data);
-
-  /* parse query set */
   int ret4 = interface::ParseDataset(files.query_file, queries);
 
-  for (int i = 0; i < 5; i++) {
-    std::vector<std::pair<int, Item<uint8_t>*>> kNNRes = lshmain.ApproxNN(queries.images[i], lsh_input.N);
+  interface::output::KNNOutput output;
+  output.n = 5;
+  output.R = 0.0;
+  output.method = "LSH";
 
-    std::cout << "----" << i << "----" << '\n';
-    for (int j = 0; j < kNNRes.size(); j++) {
-      std::cout << j << "th Distance - ApproxNN " << kNNRes[j].first << ", Item -> " << kNNRes[j].second->id << '\n';
-    }
+  BruteForce<uint8_t> bf = BruteForce<uint8_t>(data);
+  // clock_t begin = clock();
+  // double averageItemDistance = bf.averageDistance(0.05);
+  // clock_t end = clock();
+  // double elapsed = double(end - begin) / CLOCKS_PER_SEC;
+  // std::cout << "avgItemDist: " << averageItemDistance << '\n';
+  // std::cout << "Time for avgItemDist: " << elapsed << '\n';
+  bf.buildOutput(output, queries, lsh_input.N);
 
-    std::vector<std::pair<int, Item<uint8_t>*>> rsRes = lshmain.RangeSearch(queries.images[i], lsh_input.R);
+  LSH<uint8_t> lsh = LSH<uint8_t>(lsh_input, data, 10000);
+  lsh.buildOutput(output, queries, lsh_input.N, lsh_input.R);
 
-    std::cout << "----" << i << "----" << '\n';
-    for (int j = 0; j < rsRes.size(); j++) {
-      std::cout << j << "th Distance - RangeSearch" << rsRes[j].first  << ", Item -> " << kNNRes[j].second->id << '\n';
-    }
-
-  }
+  interface::output::writeOutput(files.output_file, output, status);
 
   return 0;
 }

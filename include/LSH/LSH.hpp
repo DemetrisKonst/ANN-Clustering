@@ -2,39 +2,34 @@
 #include <utility>
 #include <algorithm>
 #include <limits>
+#include <ctime>
 
 #include "../core/item.hpp"
 #include "LSHFun.hpp"
 #include "../metrics/metrics.hpp"
-
-template <typename T>
-bool comparePairs (std::pair<int, Item<T>*> x, std::pair<int, Item<T>*> y) {
-  return (x.first < y.first);
-}
+#include "../utils/lsh_hc.hpp"
 
 template <typename T>
 class LSH {
 private:
-  int imageCount;      //number of images
+  int imageCount;          //number of images
   int htSize;
-  int dimension;      //dimension
+  int dimension;           //dimension
   int functionAmount;      //number of hash functions for each amplified hash function
-  int htAmount;      //number of hash tables
-  double searchRadius;      //search radius
+  int htAmount;            //number of hash tables
+  double averageItemDistance;
   unsigned long int mConstant;
 
   std::vector<Item<T>*>** H;
   AmplifiedHashFunction<T>** g;
 
 public:
-  LSH (interface::input::LSH::LSHInput lshi, const interface::Data<T>& ds) {
+  LSH (interface::input::LSH::LSHInput& lshi, const interface::Data<T>& ds, double avg) : averageItemDistance(avg) {
     functionAmount = lshi.k;
     htAmount = lshi.L;
-    searchRadius = lshi.R;
     imageCount = ds.n;
     dimension = ds.dimension;
     Item<T>** items = ds.items;
-    mConstant = pow(2, 32) - 5;
     int div = 16;
 
     htSize = imageCount/div;
@@ -42,13 +37,14 @@ public:
     g = new AmplifiedHashFunction<T>*[htAmount];
     H = new std::vector<Item<T>*>*[htAmount];
 
+    mConstant = pow(2, 32) - 5;
     int* mmod = new int[dimension];
     for (int b = 0; b < dimension; b++)
       mmod[b] = utils::modEx(mConstant, dimension-b-1, pow(2, 32/functionAmount));
 
 
     for (int i = 0; i < htAmount; i++) {
-      g[i] = new AmplifiedHashFunction<T>(searchRadius, 4, functionAmount, dimension, mmod);
+      g[i] = new AmplifiedHashFunction<T>(averageItemDistance, 4, functionAmount, dimension, mmod);
 
       H[i] = new std::vector<Item<T>*>[htSize];
       for (int j = 0; j < htSize; j++) {
@@ -68,7 +64,7 @@ public:
     }
   }
 
-  std::vector<std::pair<int, Item<T>*>> ApproxNN (T* query, int N, int thresh = 0) {
+  std::vector<std::pair<int, Item<T>*>> kNN (T* query, int N, int thresh = 0) {
     std::vector<std::pair<int, Item<T>*>> d;
 
     for (int i = 0; i < N; i++)
@@ -134,10 +130,49 @@ public:
     return d;
   }
 
-  void buildOutput (interface::output::KNNOutput& output, const interface::Data<T>& queryData) {
-    output.n = queryData.n;
-    output.R = 0;
-    output.method = "LSH";
+  void buildOutput (interface::output::KNNOutput& output, interface::Dataset& query, int N, double R, int thresh = 0) {
+    std::vector<std::vector<int>> neighborIdVec;
+    std::vector<std::vector<double>> distVec;
+    std::vector<double> timeVec;
+    std::vector<std::vector<int>> rsIdVec;
 
+    for (int i = 0; i < 5; i++) {
+      std::vector<int> tmpNVec;
+      std::vector<double> tmpDistVec;
+
+      clock_t begin = clock();
+
+      std::vector<std::pair<int, Item<T>*>> kNNRes = kNN(query.images[i], N, thresh);
+
+      clock_t end = clock();
+      double elapsed = double(end - begin) / CLOCKS_PER_SEC;
+
+      for (int j = 0; j < kNNRes.size(); j++) {
+        if (!kNNRes[j].second->null) {
+          tmpNVec.push_back(kNNRes[j].second->id);
+          tmpDistVec.push_back((double) kNNRes[j].first);
+        }
+      }
+
+      std::vector<int> tmpRsVec;
+
+      std::vector<std::pair<int, Item<T>*>> rsRes = RangeSearch(query.images[i], R, thresh);
+
+      for (int j = 0; j < rsRes.size(); j++) {
+        if (!rsRes[j].second->null) {
+          tmpRsVec.push_back(rsRes[j].second->id);
+        }
+      }
+
+      neighborIdVec.push_back(tmpNVec);
+      distVec.push_back(tmpDistVec);
+      timeVec.push_back(elapsed);
+      rsIdVec.push_back(tmpRsVec);
+    }
+
+    output.n_neighbors_id = neighborIdVec;
+    output.approx_distance = distVec;
+    output.approx_time = timeVec;
+    output.r_near_neighbors_id = rsIdVec;
   }
 };

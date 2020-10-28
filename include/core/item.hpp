@@ -30,6 +30,7 @@ struct Item {
     data = item.data;
     staged = item.staged;
     marked = item.marked;
+    null = item.null;
   }
 
   bool operator == (const Item<T> &item) {
