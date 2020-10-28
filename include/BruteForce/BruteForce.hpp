@@ -1,6 +1,7 @@
 #include <utility>
 #include <limits>
 #include <ctime>
+#include <cmath>
 
 #include "../core/item.hpp"
 #include "../metrics/metrics.hpp"
@@ -18,6 +19,25 @@ public:
     imageCount = ds.n;
     dimension = ds.dimension;
     items = ds.items;
+  }
+
+  double averageDistance (double datasetPercentage) {
+    int partitionSize = floor(datasetPercentage*imageCount);
+
+    std::cout << partitionSize << " out of " << imageCount << '\n';
+
+    double outerSum = 0.0;
+    for (int i = 0; i < partitionSize; i++) {
+      int innerSum = 0;
+      for (int j = 0; j < partitionSize; j++) {
+        if (i == j) continue;
+
+        innerSum += metrics::ManhattanDistance<T>(items[i]->data, items[j]->data, dimension);
+      }
+      outerSum += 1.0*innerSum/partitionSize;
+    }
+
+    return outerSum/partitionSize;
   }
 
   std::vector<std::pair<int, Item<T>*>> kNN (T* query, int N, int thresh = 0) {

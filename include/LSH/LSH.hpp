@@ -12,22 +12,21 @@
 template <typename T>
 class LSH {
 private:
-  int imageCount;      //number of images
+  int imageCount;          //number of images
   int htSize;
-  int dimension;      //dimension
+  int dimension;           //dimension
   int functionAmount;      //number of hash functions for each amplified hash function
-  int htAmount;      //number of hash tables
-  double searchRadius;      //search radius
+  int htAmount;            //number of hash tables
+  double averageItemDistance;
   unsigned long int mConstant;
 
   std::vector<Item<T>*>** H;
   AmplifiedHashFunction<T>** g;
 
 public:
-  LSH (interface::input::LSH::LSHInput& lshi, interface::Data<T>& ds) {
+  LSH (interface::input::LSH::LSHInput& lshi, interface::Data<T>& ds, double avg) : averageItemDistance(avg) {
     functionAmount = lshi.k;
     htAmount = lshi.L;
-    searchRadius = lshi.R;
     imageCount = ds.n;
     dimension = ds.dimension;
     Item<T>** items = ds.items;
@@ -45,7 +44,7 @@ public:
 
 
     for (int i = 0; i < htAmount; i++) {
-      g[i] = new AmplifiedHashFunction<T>(searchRadius, 4, functionAmount, dimension, mmod);
+      g[i] = new AmplifiedHashFunction<T>(averageItemDistance, 4, functionAmount, dimension, mmod);
 
       H[i] = new std::vector<Item<T>*>[htSize];
       for (int j = 0; j < htSize; j++) {
