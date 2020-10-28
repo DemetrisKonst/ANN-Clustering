@@ -20,7 +20,7 @@ namespace interface
       /* struct used to define the LSH input (from the command line), the rest (epsilon, c) can be found in a configfile */
       typedef struct HCInput
       {
-        uint8_t k = 4;
+        uint8_t k = 14;
         uint32_t M = 10;
         uint16_t probes = 2;
         uint32_t N = 1;

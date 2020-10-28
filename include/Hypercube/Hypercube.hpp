@@ -23,7 +23,7 @@ private:
 
   std::vector<Item<T>*>* H;
 public:
-  Hypercube(interface::input::HC::HCInput hci, interface::Data<T> ds) {
+  Hypercube(interface::input::HC::HCInput hci, const interface::Data<T>& ds) {
     HCdim = hci.k;
     searchRadius = hci.R;
     n = ds.n;

@@ -359,10 +359,12 @@ namespace clustering
     uint32_t HC_M = 10;
     uint8_t HC_k = 3;
     uint16_t HC_probes = 2;
+    double radius = 0.0;
     double silhouette = 0.0;
     ClusterCenter<T>** centers;
     std::vector<double>* silhouettes;
     LSH<T>* lsh;
+    Hypercube<T>* hypercube;
 
 
     /* helper method to compute the min distances of each data point to any center */
@@ -433,6 +435,50 @@ namespace clustering
 
         /* increment the number of centers */
         current_centers++;
+      }
+    }
+
+
+    /* method used to initialize useful data structures (LSH or Hypercube) */
+    void _initialize_data_structures(const interface::Data<T>& data, const std::string& method)
+    {
+      /* check which object to initialize, depending on the method desired */
+      if (method == "LSH")
+      {
+        /* check if this is not the first time initializing an LSH object */
+        if (lsh != NULL)
+        {
+          delete lsh;
+        }
+
+        /* create and LSH input object */
+        interface::input::LSH::LSHInput lsh_input;
+        /* assign the values that were given in the configuration file */
+        lsh_input.k = LSH_k;
+        lsh_input.L = LSH_L;
+        radius = lsh_input.R;
+
+        /* initialize the LSH object */
+        lsh = new LSH<T>(lsh_input, data);
+      }
+      else if (method == "Hypercube")
+      {
+        /* check if this is not the first time initializing a Hypercube object */
+        if (hypercube != NULL)
+        {
+          delete hypercube;
+        }
+
+        /* create and LSH input object */
+        interface::input::HC::HCInput hc_input;
+        /* assign the values that were given in the configuration file */
+        hc_input.k = HC_k;
+        hc_input.M = HC_M;
+        hc_input.probes = HC_probes;
+        radius = hc_input.R;
+
+        /* initialize the LSH object */
+        hypercube = new Hypercube<T>(hc_input, data);
       }
     }
 
@@ -562,47 +608,64 @@ namespace clustering
     }
 
 
-    /* method that implements Reverse Assignment with LSH Algorithm for Clustering */
-    void _LSH_Assignment(const interface::Data<T>& data)
+    /* method that implements Reverse Assignment with LSH or HC Algorithm for Clustering */
+    void _Reverse_Assignment(const interface::Data<T>& data, const std::string& method, const uint16_t& max_iterations=3)
     {
-      int iterations = 0;
-      double radius = 5000;
-      int counter = 0;
+      /* define some variables used for the stopping conditions */
+      uint16_t iterations = 0;
+      uint16_t balls_changed = 0;
 
-      do {
-        counter = 0;
+      /* keep iterating (doubling the radius and performing range search) until stopping conditions are met */
+      do
+      {
+        /* reset the number *balls* that got points */
+        balls_changed = 0;
+
         /* for each cluster */
-        for (int c = 0; c < K; c++) {
-          std::vector<std::pair<int, Item<T>*>> ret = lsh->RangeSearch(centers[c]->get_components(), radius);
+        for (int c = 0; c < K; c++)
+        {
+          /* define a variable to store the result of the Range Search */
+          std::vector<std::pair<int, Item<T>*>> ret;
 
-          /* if this ball gets at least one point */
+          /* determine which method to perform Range Search with */
+          if (method == "LSH")
+          {
+            /* perform range search */
+            ret = lsh->RangeSearch(centers[c]->get_components(), radius);
+          }
+          else
+          {
+            /* perform range search */
+            ret = hypercube->RangeSearch(centers[c]->get_components(), radius);
+          }
+
+          /* if this ball gets at least one point, increment the counter */
           if (ret.size() > 0)
           {
-            counter++;
+            balls_changed++;
           }
 
           /* add the items of the range search to the cluster */
-          for (int i = 0; i < ret.size(); i++) {
+          for (int i = 0; i < ret.size(); i++)
+          {
             centers[c]->add_to_cluster(ret[i].second);
             ret[i].second->marked = true;
           }
 
-          radius *= 2;
         }
+
+        /* double the radius */
+        radius *= 2;
 
         /* increment the number of iterations */
         iterations++;
-        /* until 80% of balls get new points */
-      } while (counter >= K * 0.2 || iterations < 5);
 
+        /* until 80% of balls get new points, and max_iterations have been perfomed at least */
+      } while (balls_changed >= K * 0.2 || iterations < max_iterations);
+
+
+      /* perform Lloyds (brute force) assignment for the rest points that were not assigned */
       _Lloyd_Assignment(data);
-    }
-
-
-    /* method that implements Reverse Assignment with Hypercube Algorithm for Clustering */
-    void _HC_Assignment(const interface::Data<T>& data)
-    {
-
     }
 
 
@@ -672,8 +735,8 @@ namespace clustering
 
     /* constructor used to build the object */
     Clustering(const interface::input::clustering::ClusteringConfig& configuration, const interface::Data<T>& data):
-    K(configuration.clusters_K), LSH_L(configuration.LSH_L), LSH_k(configuration.LSH_k),
-    HC_M(configuration.HC_M), HC_k(configuration.HC_k), HC_probes(configuration.HC_probes), lsh(NULL)
+    K(configuration.clusters_K), LSH_L(configuration.LSH_L), LSH_k(configuration.LSH_k), HC_M(configuration.HC_M),
+    radius(0.0), HC_k(configuration.HC_k), HC_probes(configuration.HC_probes), lsh(NULL), hypercube(NULL)
     {
       /* create a vector that will be used to store the silhouettes */
       silhouettes = new std::vector<double>;
@@ -698,6 +761,16 @@ namespace clustering
       }
       /* delete matrix containing them */
       delete[] centers;
+
+      /* delete the data structures that were used during clustering, if they were used */
+      if (lsh != NULL)
+      {
+        delete lsh;
+      }
+      if (hypercube != NULL)
+      {
+        delete hypercube;
+      }
     }
 
 
@@ -710,11 +783,11 @@ namespace clustering
       /* variable used to remeber the start of the execution time */
       auto start = std::chrono::high_resolution_clock::now();
 
-      /* initialize LSH */
-      interface::input::LSH::LSHInput lsh_input;
-      lsh_input.k = LSH_k;
-      lsh_input.L = LSH_L;
-      lsh = new LSH<T>(lsh_input, data);
+      /* see if we have to use a Reverse assignment method, and if yes initialize the corresponding object */
+      if (method == "LSH" || method == "Hypercube")
+      {
+        _initialize_data_structures(data, method);
+      }
 
 
       /* keep iterating while there are changed made in the cluster centers */
@@ -726,7 +799,6 @@ namespace clustering
         /* first remove the "assignment" of data points in the cluster centers */
         _clear_centers();
 
-
         /* unmark all data point */
         _unmark_data_points(data);
 
@@ -736,14 +808,11 @@ namespace clustering
         {
           _Lloyd_Assignment(data);
         }
-        else if (method == "LSH")
-        {
-          _LSH_Assignment(data);
-        }
         else
         {
-          _HC_Assignment(data);
+          _Reverse_Assignment(data, method);
         }
+
 
         /* now the update step: find new centroids */
         _update_step(&center_changed);
