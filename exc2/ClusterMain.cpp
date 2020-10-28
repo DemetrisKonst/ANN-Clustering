@@ -51,7 +51,7 @@ int main(int argc, char const *argv[])
   clustering::Clustering<uint8_t> cluster(cluster_config, data);
   /* variable used to measure execution time */
   double duration = 0.0;
-  cluster.perform_clustering(data, "Classic", &duration);
+  cluster.perform_clustering(data, cluster_input.algorithm, &duration);
 
   /* get the silhouette and print it */
   double average_silhouette = cluster.compute_average_silhouette(data);

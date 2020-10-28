@@ -27,7 +27,7 @@ private:
   AmplifiedHashFunction<T>** g;
 
 public:
-  LSH (interface::input::LSH::LSHInput lshi, interface::Data<T> ds) {
+  LSH (interface::input::LSH::LSHInput lshi, const interface::Data<T>& ds) {
     functionAmount = lshi.k;
     htAmount = lshi.L;
     searchRadius = lshi.R;
@@ -138,6 +138,6 @@ public:
     output.n = queryData.n;
     output.R = 0;
     output.method = "LSH";
-    
+
   }
 };

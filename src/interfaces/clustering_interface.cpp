@@ -111,6 +111,11 @@ int interface::input::clustering::ClusteringParseInput(const int& argc, const ch
       input.algorithm = value;
       i++;
     }
+    else
+    {
+      status = INVALID_INPUT_CLUSTERING;
+      return 0;
+    }
 
     i++;
   }

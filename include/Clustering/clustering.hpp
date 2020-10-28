@@ -10,11 +10,15 @@
 #include <chrono>
 #include <algorithm>
 #include <functional>
+#include <utility>
 
 #include "../interfaces/clustering_interface.h"
+#include "../interfaces/LSH_interface.h"
 #include "../metrics/metrics.hpp"
 #include "../core/item.hpp"
 #include "../utils/cluster.hpp"
+#include "../LSH/LSH.hpp"
+#include "../Hypercube/Hypercube.hpp"
 
 
 /* namespace used to implement clustering algorithms */
@@ -358,6 +362,7 @@ namespace clustering
     double silhouette = 0.0;
     ClusterCenter<T>** centers;
     std::vector<double>* silhouettes;
+    LSH<T>* lsh;
 
 
     /* helper method to compute the min distances of each data point to any center */
@@ -451,6 +456,7 @@ namespace clustering
       {
         /* get the item */
         Item<T>* item = data.items[i];
+
         /* set it to unmarked */
         item->marked = false;
       }
@@ -559,7 +565,37 @@ namespace clustering
     /* method that implements Reverse Assignment with LSH Algorithm for Clustering */
     void _LSH_Assignment(const interface::Data<T>& data)
     {
+      int iterations = 0;
+      double radius = 5000;
+      int counter = 0;
 
+      do {
+        counter = 0;
+        /* for each cluster */
+        for (int c = 0; c < K; c++) {
+          std::vector<std::pair<int, Item<T>*>> ret = lsh->RangeSearch(centers[c]->get_components(), radius);
+
+          /* if this ball gets at least one point */
+          if (ret.size() > 0)
+          {
+            counter++;
+          }
+
+          /* add the items of the range search to the cluster */
+          for (int i = 0; i < ret.size(); i++) {
+            centers[c]->add_to_cluster(ret[i].second);
+            ret[i].second->marked = true;
+          }
+
+          radius *= 2;
+        }
+
+        /* increment the number of iterations */
+        iterations++;
+        /* until 80% of balls get new points */
+      } while (counter >= K * 0.2 || iterations < 5);
+
+      _Lloyd_Assignment(data);
     }
 
 
@@ -637,7 +673,7 @@ namespace clustering
     /* constructor used to build the object */
     Clustering(const interface::input::clustering::ClusteringConfig& configuration, const interface::Data<T>& data):
     K(configuration.clusters_K), LSH_L(configuration.LSH_L), LSH_k(configuration.LSH_k),
-    HC_M(configuration.HC_M), HC_k(configuration.HC_k), HC_probes(configuration.HC_probes)
+    HC_M(configuration.HC_M), HC_k(configuration.HC_k), HC_probes(configuration.HC_probes), lsh(NULL)
     {
       /* create a vector that will be used to store the silhouettes */
       silhouettes = new std::vector<double>;
@@ -674,6 +710,12 @@ namespace clustering
       /* variable used to remeber the start of the execution time */
       auto start = std::chrono::high_resolution_clock::now();
 
+      /* initialize LSH */
+      interface::input::LSH::LSHInput lsh_input;
+      lsh_input.k = LSH_k;
+      lsh_input.L = LSH_L;
+      lsh = new LSH<T>(lsh_input, data);
+
 
       /* keep iterating while there are changed made in the cluster centers */
       while (center_changed)
@@ -684,8 +726,10 @@ namespace clustering
         /* first remove the "assignment" of data points in the cluster centers */
         _clear_centers();
 
+
         /* unmark all data point */
         _unmark_data_points(data);
+
 
         /* determine which algorithm to use in the assignment step */
         if (method == "Classic")

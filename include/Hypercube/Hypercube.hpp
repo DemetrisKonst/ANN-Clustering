@@ -5,10 +5,10 @@
 #include "../metrics/metrics.hpp"
 #include "../interfaces/HC_interface.h"
 
-template <typename T>
-bool comparePairs (std::pair<int, Item<T>*> x, std::pair<int, Item<T>*> y) {
-  return (x.first < y.first);
-}
+// template <typename T>
+// bool comparePairs (std::pair<int, Item<T>*> x, std::pair<int, Item<T>*> y) {
+//   return (x.first < y.first);
+// }
 
 template <typename T>
 class Hypercube {

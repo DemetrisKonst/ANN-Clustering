@@ -23,7 +23,7 @@ namespace interface
         uint8_t k = 4;
         uint8_t L = 5;
         uint32_t N = 1;
-        double R = 1.0;
+        double R = 10000.0;
       } LSHInput;
 
       /* function to parse command line parameters */
