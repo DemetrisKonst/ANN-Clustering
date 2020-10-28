@@ -39,24 +39,23 @@ The centroids are initialized using initialization++ in every algorithm.
 
 Every algorithm consists of the same 2 steps:
 1. Assignment (Expectation): Assign each object to its nearest center.
-2. Update (Maximization): Calculate Mean per cluster and make it new center.
+2. Update (Maximization): Calculate Median of each dimension per cluster and make it new center.
 
 Note that the second step is the same for every algorithm.
 
 ### **Lloyds Algorithm**
 Lloyds Algorithm is basically the brute-force approach to the Clustering Problem.
 - In the Assignment step, every data point is compared with every cluster center to find the closest one and assign that point to it.
-- In the update step, for every cluster the new center is computed by taking the average of all the vectors inside that cluster.
-
+- In the update step, for every cluster the new center is computed by taking the median of every component of all the vectors in the cluster.
 ### **Reverse Assignment using Range Search LSH**
 The goal behind this algorithm (and the Hypercube version respectively) is to avoid brute-force checking every data point in the assignment step.
 - In the Assignment step, we use Range Search LSH with increasing radius to find the nearby points, until some threshold is achieved. After that, every non-assigned point in the end is then assigned manually by computing the distance to each centroid and taking the minimum.
-- In the update step, as in Lloyds, we compute the mean of all the vectors in a cluster for every cluster, and assign it to the centroid.
+- In the update step, as in Lloyds, we compute the median of every dimension of all the vectors in the cluster, and assign it to the centroid.
 
 ### **Reverse Assignment using Range Search Hypercube**
 Again, the steps are pretty much similar.
 - In the Assignment step, we use Range Search Hypercube with increasing radius to find the nearby points, until some threshold is achieved. After that, every non-assigned point in the end is then assigned manually by computing the distance to each centroid and taking the minimum.
-- In the update step, as before, the new centroid is computed by taking the mean of all the vectors inside the cluster.
+- In the update step, as before, the new centroid is computed by taking the median of every dimension of all the vectors in the cluster.
 <br> </br>
 
 
@@ -176,7 +175,7 @@ Here are some examples on how to run the compiled code:
     - c = ./conf/cluster.conf, the path to the configuration file
     - o = ./output/lsh_output.txt, the path to the output file
     - complete, flag given to log more information
-    - m = LSH, the method to perform the Clustering with (Classic, LSH, Hypercube) 
+    - m = LSH, the method to perform the Clustering with (available options are: Classic, LSH, Hypercube) 
     ```bash
     $ ./bin/cluster -d ./Dataset/train-images-idx3-ubyte
                     -c ./conf/cluster.conf
