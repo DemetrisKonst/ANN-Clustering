@@ -40,22 +40,22 @@ int main(int argc, char const *argv[])
   }
 
   ///////////////////// SMALLER DATASET ///////////////////////
-  // interface::Dataset dataset2;
-  // dataset2.magic_number = dataset.magic_number;
-  // dataset2.number_of_images = dataset.number_of_images / 10;
-  // dataset2.rows_per_image = dataset.rows_per_image;
-  // dataset2.columns_per_image = dataset.columns_per_image;
-  //
-  // dataset2.images = new uint8_t*[dataset2.number_of_images];
-  // for (int i = 0; i < dataset2.number_of_images; i++)
-  // {
-  //   dataset2.images[i] = dataset.images[i];
-  // }
+  interface::Dataset dataset2;
+  dataset2.magic_number = dataset.magic_number;
+  dataset2.number_of_images = dataset.number_of_images / 10;
+  dataset2.rows_per_image = dataset.rows_per_image;
+  dataset2.columns_per_image = dataset.columns_per_image;
+
+  dataset2.images = new uint8_t*[dataset2.number_of_images];
+  for (int i = 0; i < dataset2.number_of_images; i++)
+  {
+    dataset2.images[i] = dataset.images[i];
+  }
   ///////////////////// SMALLER DATASET ///////////////////////
 
 
   /* create a Data object that will be used to move around the data */
-  interface::Data<uint8_t> data(dataset);
+  interface::Data<uint8_t> data(dataset2);
 
   /* create a Clustering object in order to perform the clustering */
   clustering::Clustering<uint8_t> cluster(cluster_config, data);
