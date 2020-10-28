@@ -1,5 +1,6 @@
 #include <utility>
 #include <limits>
+#include <ctime>
 
 #include "../core/item.hpp"
 #include "../metrics/metrics.hpp"
@@ -52,14 +53,33 @@ public:
     }
   }
 
-  std::vector<std::vector<std::pair<int, Item<T>*>>> buildOutput (interface::Dataset& query, int N, int thresh = 0) {
-    std::vector<std::vector<std::pair<int, Item<T>*>>> bfVec;
+  void buildOutput (interface::output::KNNOutput& output, interface::Dataset& query, int N, int thresh = 0) {
+    std::vector<std::vector<double>> distVec;
+    std::vector<double> timeVec;
+    std::vector<int> queryIdVec;
 
-    for (int i = 0; i < query.number_of_images; i++) {
+    for (int i = 0; i < 5; i++) {
+      std::vector<double> tmpDistVec;
+      clock_t begin = clock();
+
       std::vector<std::pair<int, Item<T>*>> kNNRes = kNN(query.images[i], N, thresh);
-      bfVec.push_back(kNNRes);
+
+      clock_t end = clock();
+      double elapsed = double(end - begin) / CLOCKS_PER_SEC;
+
+      for (int j = 0; j < kNNRes.size(); j++){
+        if (!kNNRes[j].second->null){
+          tmpDistVec.push_back( (double) kNNRes[j].first);
+        }
+      }
+
+      distVec.push_back(tmpDistVec);
+      timeVec.push_back(elapsed);
+      queryIdVec.push_back(i);
     }
 
-    return bfVec;
+    output.true_distance = distVec;
+    output.true_time = timeVec;
+    output.query_id = queryIdVec;
   }
 };

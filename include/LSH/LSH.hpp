@@ -2,6 +2,7 @@
 #include <utility>
 #include <algorithm>
 #include <limits>
+#include <ctime>
 
 #include "../core/item.hpp"
 #include "LSHFun.hpp"
@@ -30,7 +31,6 @@ public:
     imageCount = ds.n;
     dimension = ds.dimension;
     Item<T>** items = ds.items;
-    mConstant = pow(2, 32) - 5;
     int div = 16;
 
     htSize = imageCount/div;
@@ -38,6 +38,7 @@ public:
     g = new AmplifiedHashFunction<T>*[htAmount];
     H = new std::vector<Item<T>*>*[htAmount];
 
+    mConstant = pow(2, 32) - 5;
     int* mmod = new int[dimension];
     for (int b = 0; b < dimension; b++)
       mmod[b] = utils::modEx(mConstant, dimension-b-1, pow(2, 32/functionAmount));
@@ -130,13 +131,49 @@ public:
     return d;
   }
 
-  std::vector<std::vector<std::pair<int, Item<T>*>>> buildOutput (interface::Dataset& query, int N, int thresh = 0) {
-    std::vector<std::vector<std::pair<int, Item<T>*>>> LSHVec;
+  void buildOutput (interface::output::KNNOutput& output, interface::Dataset& query, int N, double R, int thresh = 0) {
+    std::vector<std::vector<int>> neighborIdVec;
+    std::vector<std::vector<double>> distVec;
+    std::vector<double> timeVec;
+    std::vector<std::vector<int>> rsIdVec;
 
-    for (int i = 0; i < query.number_of_images; i++) {
-      LSHVec.push_back(kNN(query.images[i], N, thresh));
+    for (int i = 0; i < 5; i++) {
+      std::vector<int> tmpNVec;
+      std::vector<double> tmpDistVec;
+
+      clock_t begin = clock();
+
+      std::vector<std::pair<int, Item<T>*>> kNNRes = kNN(query.images[i], N, thresh);
+
+      clock_t end = clock();
+      double elapsed = double(end - begin) / CLOCKS_PER_SEC;
+
+      for (int j = 0; j < kNNRes.size(); j++) {
+        if (!kNNRes[j].second->null) {
+          tmpNVec.push_back(kNNRes[j].second->id);
+          tmpDistVec.push_back((double) kNNRes[j].first);
+        }
+      }
+
+      std::vector<int> tmpRsVec;
+
+      std::vector<std::pair<int, Item<T>*>> rsRes = RangeSearch(query.images[i], R, thresh);
+
+      for (int j = 0; j < rsRes.size(); j++) {
+        if (!rsRes[j].second->null) {
+          tmpRsVec.push_back(rsRes[j].second->id);
+        }
+      }
+
+      neighborIdVec.push_back(tmpNVec);
+      distVec.push_back(tmpDistVec);
+      timeVec.push_back(elapsed);
+      rsIdVec.push_back(tmpRsVec);
     }
 
-    return LSHVec;
+    output.n_neighbors_id = neighborIdVec;
+    output.approx_distance = distVec;
+    output.approx_time = timeVec;
+    output.r_near_neighbors_id = rsIdVec;
   }
 };

@@ -25,24 +25,18 @@ int main(int argc, char const *argv[]) {
 
   int ret4 = interface::ParseDataset(files.query_file, queries);
 
-  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+  interface::output::KNNOutput output;
+  output.n = 5;
+  output.R = 0.0;
+  output.method = "LSH";
 
   BruteForce<uint8_t> bf = BruteForce<uint8_t>(data);
-  std::vector<std::vector<std::pair<int, Item<uint8_t>*>>> bfOutput = bf.buildOutput(queries, lsh_input.N);
-
-  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-  std::cout << "BF Time = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
-
-
-  begin = std::chrono::steady_clock::now();
+  bf.buildOutput(output, queries, lsh_input.N);
 
   LSH<uint8_t> lsh = LSH<uint8_t>(lsh_input, data);
-  std::vector<std::vector<std::pair<int, Item<uint8_t>*>>> lshOutput = lsh.buildOutput(queries, lsh_input.N);
+  lsh.buildOutput(output, queries, lsh_input.N, lsh_input.R);
 
-  end = std::chrono::steady_clock::now();
-  std::cout << "LSH Time = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
-
-  interface::output::
+  interface::output::writeOutput(files.output_file, output, status);
 
   return 0;
 }
