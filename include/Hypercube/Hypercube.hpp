@@ -19,7 +19,7 @@ private:
 
   std::vector<Item<T>*>* H;
 public:
-  Hypercube(interface::input::HC::HCInput& hci, interface::Data<T>& ds) {
+  Hypercube(interface::input::HC::HCInput& hci, const interface::Data<T>& ds) {
     HCdim = hci.k;
     searchRadius = hci.R;
     n = ds.n;
@@ -36,8 +36,13 @@ public:
       H[i] = tmpVec;
     }
 
+    long int mConstant = pow(2, 32) - 5;
+    int* mmod = new int[datadim];
+    for (int b = 0; b < datadim; b++)
+      mmod[b] = utils::modEx(mConstant, datadim-b-1, pow(2, 32/HCdim));
+
     for (int i = 0; i < HCdim; i++) {
-      LSHFun.push_back(HashFunction<T>(searchRadius, 4, 4, datadim, m));
+      LSHFun.push_back(HashFunction<T>(searchRadius, 4, 4, datadim, mmod));
     }
 
     for (int i = 0; i < n; i++) {

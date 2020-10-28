@@ -24,7 +24,7 @@ private:
   AmplifiedHashFunction<T>** g;
 
 public:
-  LSH (interface::input::LSH::LSHInput& lshi, interface::Data<T>& ds, double avg) : averageItemDistance(avg) {
+  LSH (interface::input::LSH::LSHInput& lshi, const interface::Data<T>& ds, double avg) : averageItemDistance(avg) {
     functionAmount = lshi.k;
     htAmount = lshi.L;
     imageCount = ds.n;

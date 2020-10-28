@@ -1,13 +1,14 @@
 #include <iostream>
 
-#include "../include/interfaces/clustering_interface.h"
 #include "../include/Clustering/clustering.hpp"
 
 
 int main(int argc, char const *argv[])
 {
 
-  /* define the variables */
+  /* define useful variables */
+  int success = 0;
+  double duration = 0.0;
   interface::ExitCode status;
   interface::Dataset dataset;
   interface::IOCFiles files;
@@ -15,19 +16,28 @@ int main(int argc, char const *argv[])
   interface::input::clustering::ClusteringConfig cluster_config;
 
   /* parse clustering input */
-  int ret = interface::input::clustering::ClusteringParseInput(argc, argv, cluster_input, files, status);
-  if (ret != 1)
-  {
-    interface::output::PrintErrorMessageAndExit(status);
-  }
-  ret = interface::input::clustering::ClusteringParseConfigFile(files.configuration_file, cluster_config, status);
-  if (ret != 1)
+  success = interface::input::clustering::ClusteringParseInput(argc, argv, cluster_input, files, status);
+  /* check for potential errors or violations */
+  if (success != 1)
   {
     interface::output::PrintErrorMessageAndExit(status);
   }
 
   /* parse dataset */
-  int ret3 = interface::ParseDataset(files.input_file, dataset);
+  success = interface::ParseDataset(files.input_file, dataset);
+  /* check for potential errors or violations */
+  if (success != 1)
+  {
+    interface::output::PrintErrorMessageAndExit(status);
+  }
+
+  /* parse configuration file */
+  success = interface::input::clustering::ClusteringParseConfigFile(files.configuration_file, cluster_config, status);
+  /* check for potential errors or violations */
+  if (success != 1)
+  {
+    interface::output::PrintErrorMessageAndExit(status);
+  }
 
   ///////////////////// SMALLER DATASET ///////////////////////
   interface::Dataset dataset2;
@@ -49,18 +59,15 @@ int main(int argc, char const *argv[])
 
   /* create a Clustering object in order to perform the clustering */
   clustering::Clustering<uint8_t> cluster(cluster_config, data);
-  /* variable used to measure execution time */
-  double duration = 0.0;
-  cluster.perform_clustering(data, "Classic", &duration);
+  /* perform the clustering */
+  cluster.perform_clustering(data, cluster_input.algorithm, &duration);
 
   /* get the silhouette and print it */
   double average_silhouette = cluster.compute_average_silhouette(data);
 
-  /* create an Output object, and build it */
+  /* create an Output object, build it and use it to log the results to the outfile */
   interface::output::clustering::ClusteringOutput output;
   cluster.build_output(output, data, cluster_input, duration);
-
-  /* log the results to the outfile */
   interface::output::clustering::writeOutput(files.output_file, output, status);
 
 
@@ -85,7 +92,7 @@ int main(int argc, char const *argv[])
 
   /* free up the allocated space and return */
   interface::freeDataset(dataset);
-  // cluster.free_output_object_memory(output);
+  cluster.free_output_object_memory(output);
 
   /////////////////////// SMALLER DATASET ///////////////////////
   // delete[] dataset2.images;
