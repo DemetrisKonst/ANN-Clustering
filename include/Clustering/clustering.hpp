@@ -109,7 +109,7 @@ namespace clustering
 
 
     /* method used to compute the new cluster center from the data points in the cluster; returns true if the center changes; else false */
-    void compute_new_center_from_data(bool* center_changed)
+    void compute_new_center_from_data(bool* center_changed, const double& tolerance=3000)
     {
       /* create the new center */
       T* new_center = new T[dimension];
@@ -131,14 +131,14 @@ namespace clustering
         /* compute the new value for this component by finding the median value */
         std::nth_element(d_dimension.begin(), d_dimension.begin() + d_dimension.size() / 2, d_dimension.end());
         T new_value = d_dimension[d_dimension.size() / 2];
-        // utils::order_statistics(d_dimension, d_dimension.size(), d_dimension.size() / 2 + d_dimension.size() % 2);
         new_center[d] = new_value;
 
-        /* check whether a component has changed its value */
-        if (new_center[d] != components[d])
-        {
-          *center_changed = true;
-        }
+      }
+
+      /* if the new centroid differs by only a little, consider it as unchanged; else change it */
+      if (metrics::ManhattanDistance(new_center, components, dimension) > tolerance)
+      {
+        *center_changed = true;
       }
 
       /* free the memory of the previous components */
@@ -457,10 +457,10 @@ namespace clustering
         /* assign the values that were given in the configuration file */
         lsh_input.k = LSH_k;
         lsh_input.L = LSH_L;
-        radius = lsh_input.R;
+        radius = lsh_input.R / 2;
 
         /* initialize the LSH object */
-        lsh = new LSH<T>(lsh_input, data);
+        lsh = new LSH<T>(lsh_input, data, 5000);
       }
       else if (method == "Hypercube")
       {
@@ -476,7 +476,7 @@ namespace clustering
         hc_input.k = HC_k;
         hc_input.M = HC_M;
         hc_input.probes = HC_probes;
-        radius = hc_input.R;
+        radius = hc_input.R / 2;
 
         /* initialize the LSH object */
         hypercube = new Hypercube<T>(hc_input, data);
@@ -870,6 +870,11 @@ namespace clustering
           _Reverse_Assignment(data, method);
         }
 
+        // for (int c = 0; c < 3; c++)
+        // {
+        //   centers[c]->print_centroid();
+        //   interface::output::printImage(centers[c]->get_components(), 28, 28);
+        // }
 
         /* now the update step: find new centroids */
         _update_step(&center_changed);
