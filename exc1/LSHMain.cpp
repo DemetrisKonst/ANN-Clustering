@@ -18,10 +18,10 @@ int main(int argc, char const *argv[]) {
 
   /* parse LSH input */
   int ret = interface::input::LSH::LSHParseInput(argc, argv, lsh_input, files, status);
+  interface::Data<uint8_t> data(dataset);
 
   /* parse dataset */
   int ret3 = interface::ParseDataset(files.input_file, dataset);
-  interface::Data<uint8_t> data(dataset);
 
   int ret4 = interface::ParseDataset(files.query_file, queries);
 

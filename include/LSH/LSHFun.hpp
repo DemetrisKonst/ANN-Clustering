@@ -75,7 +75,7 @@ public:
     }
   }
 
-  unsigned long int HashVector (T* x) {
+  unsigned int HashVector (T* x) {
     std::vector<uint8_t> hValues;
 
     for (int i = 0; i < functionAmount; i++) {
