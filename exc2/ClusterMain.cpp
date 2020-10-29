@@ -3,8 +3,7 @@
 #include "../include/Clustering/clustering.hpp"
 
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const *argv[]) {
 
   /* define useful variables */
   int success = 0;
@@ -18,44 +17,27 @@ int main(int argc, char const *argv[])
   /* parse clustering input */
   success = interface::input::clustering::ClusteringParseInput(argc, argv, cluster_input, files, status);
   /* check for potential errors or violations */
-  if (success != 1)
-  {
+  if (success != 1) {
     interface::output::PrintErrorMessageAndExit(status);
   }
 
   /* parse dataset */
-  success = interface::ParseDataset(files.input_file, dataset);
+  success = interface::ParseDataset(files.input_file, dataset, status);
   /* check for potential errors or violations */
-  if (success != 1)
-  {
+  if (success != 1) {
     interface::output::PrintErrorMessageAndExit(status);
   }
 
   /* parse configuration file */
   success = interface::input::clustering::ClusteringParseConfigFile(files.configuration_file, cluster_config, status);
   /* check for potential errors or violations */
-  if (success != 1)
-  {
+  if (success != 1) {
     interface::output::PrintErrorMessageAndExit(status);
   }
 
-  ///////////////////// SMALLER DATASET ///////////////////////
-  interface::Dataset dataset2;
-  dataset2.magic_number = dataset.magic_number;
-  dataset2.number_of_images = dataset.number_of_images / 10;
-  dataset2.rows_per_image = dataset.rows_per_image;
-  dataset2.columns_per_image = dataset.columns_per_image;
-
-  dataset2.images = new uint8_t*[dataset2.number_of_images];
-  for (int i = 0; i < dataset2.number_of_images; i++)
-  {
-    dataset2.images[i] = dataset.images[i];
-  }
-  ///////////////////// SMALLER DATASET ///////////////////////
-
 
   /* create a Data object that will be used to move around the data */
-  interface::Data<uint8_t> data(dataset2);
+  interface::Data<uint8_t> data(dataset);
 
   /* create a Clustering object in order to perform the clustering */
   clustering::Clustering<uint8_t> cluster(cluster_config, data);
@@ -94,9 +76,6 @@ int main(int argc, char const *argv[])
   interface::freeDataset(dataset);
   cluster.free_output_object_memory(output);
 
-  /////////////////////// SMALLER DATASET ///////////////////////
-  // delete[] dataset2.images;
-  /////////////////////// SMALLER DATASET ///////////////////////
 
   return 0;
 }

@@ -479,7 +479,7 @@ namespace clustering
         radius = hc_input.R / 2;
 
         /* initialize the LSH object */
-        hypercube = new Hypercube<T>(hc_input, data);
+        hypercube = new Hypercube<T>(hc_input, data, 5000);
       }
     }
 

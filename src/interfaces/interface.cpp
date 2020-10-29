@@ -72,7 +72,7 @@ void interface::ScanInput(interface::IOFiles& files, interface::ExitCode& status
 }
 
 
-int interface::ParseDataset(const std::string& filename, interface::Dataset& dataset)
+int interface::ParseDataset(const std::string& filename, interface::Dataset& dataset, interface::ExitCode& status)
 {
   /* create an ifstream item to open and navigate the file */
   std::ifstream input_file(filename, std::ios::binary);
@@ -80,6 +80,7 @@ int interface::ParseDataset(const std::string& filename, interface::Dataset& dat
   /* make sure that the file successfully opened */
   if (!input_file.is_open())
   {
+    status = INVALID_INFILE_PATH;
     return 0;
   }
 
@@ -172,7 +173,7 @@ int interface::output::writeOutput(const std::string& outfile_name, interface::o
     outfile << "tTrue: " << output.true_time[i] << std::endl;
 
     /* log information about R-near neighbors */
-    outfile << output.R << "-near neighbors" << std::endl;
+    outfile << "R-near neighbors" << std::endl;
 
     uint32_t neighbors = output.r_near_neighbors_id[i].size();
 

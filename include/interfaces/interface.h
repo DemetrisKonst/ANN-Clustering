@@ -87,7 +87,7 @@ namespace interface
   void ScanInput(IOFiles& files, ExitCode& status, const bool& change_dataset, const bool& change_query, const bool& change_output);
 
   /* function used to read input from the dataset */
-  int ParseDataset(const std::string& filename, Dataset& dataset);
+  int ParseDataset(const std::string& filename, Dataset& dataset, ExitCode& status);
 
   /* function to free up the memory that the dataset used */
   void freeDataset(Dataset& dataset);
@@ -100,7 +100,6 @@ namespace interface
     typedef struct KNNOutput
     {
       uint32_t n;
-      double R;
       std::string method;
       std::vector<int> query_id;    // item id
       std::vector<std::vector<int>> n_neighbors_id;     // knn neighbors item id
