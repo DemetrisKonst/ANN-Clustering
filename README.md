@@ -20,14 +20,25 @@ The Datasets used to test the correctness of our algorithms is the *MNIST Databa
 
 
 ## <u> Approximate Nearest Neighbors (ANN) </u>
-ToDo dimitris?????????????????????/
+Approximate Nearest Neighbors (or ANN) is a problem in which we want to search for similar items, without enduring the huge cost of a brute force algorithm. The program implements two data structures which drastically reduce time complexity, while also retaining respectable accuracy. The data structures are the following:
+- Locality Sensitive Hashing: Hash table which maps nearby items to the same bucket
+- Randomized Projection Hypercube: Hypercube which maps similar items to the same (or nearby) vertices 
 
 ### Locality Sensitive Hashing (LSH)
-ToDo dimitris?????????????????????/
+Locality Sensitive Hashing is an algorithmic technique that hashes similar input items into the same buckets with high probability. The layers in which this algorithm is implemented are the following:
+1. <u>HashFunction</u>: This is our baseline hash function. It takes in as an input an item (image), shifts each feature (pixel) by a small amount and then divides it by the given window size. The "shifting" is constant for each for each item given, however it differs among other "sibling" functions. After this shifting is complete, it is time to calculate the following formula: <br>
+h(p)=a<sub>d-1</sub>+m*a<sub>d-2</sub>+...+m<sup>d-1</sup>*a<sub>0</sub>
+2. <u>AmplifiedHashFunction</u>: This class is called an amplified hash function as it "combines" k HashFunction instances to form a new (amplified) hash function. <br>Specifically, on creation, k HashFunction objects are initialized. When an item needs to be hashed, it gets hashed by all k of those hash functions, in the end, the results get concatenated bitwise to produce the "final" hash.
+3. <u>LSH</u>: This is the part where "everyting makes sense". It contains L hash tables (so L AmplifieadHashFunctions) and whenever an item is inserted, it is added for each hash table into its respective bucket. <br>
+To summarize, when LSH is initialized, we have L hash tables where each one contains one instance of each of our items. Whenever a query item arrives, we hash it
+for every hash table and search for its nearest neighbors among the L buckets (one from each hash table).
+
 
 ### Projection in Hypercube
-ToDo dimitris?????????????????????/
-<br> </br>
+Randomized projection into Hypercube is a similar algorithmic technique to LSH. However, instead of L hash tables with their own AmplifiedHashFunction, our dataset is stored into the vertices of a Hypercube. Layers:
+1. <u>HashFunction</u>: This is the same class implemented in LSH, whenever an item comes as input, it is shifted and then the "h" formula is calculated on it.
+2. <u>FFunc</u>: This class has a relatively simple work to do. All it has to do is map the output from HashFunction to {0,1}. To ensure that the values are distributed uniformly, a random integer among the range of HashFunction values is selected. Once selected, whenever a HashFunction value is inserted, if the random value is greater than the "h" value, it returns 0. Else, it returns 1.
+3. <u>Hypercube</u>: This is the final layer. A hypercube of dimension <b>d'</b> is created alongside d' HashFunctions and FFuncs. This hypercube is represented as an array of size 2<sup>d'</sup>. Whenever an item is inserted, it is first hashed by each HashFunction and then mapped to {0,1} by FFunc. The result is a binary number of length d' (which is equivalent to a decimal number i.e. the index of the vertex in which the item will be inserted). The process is similar whenever a query item arrives, as it is hashed, then mapped. Once mapped, we have a starting vertex from which we want to start our search for near neighbors. However, we are not limited to only this vertex, it is possible to traverse nearby hypercube vertices (e.g. vertices with hamming distance of 1 from the starting vertex).
 
 ## <u> Clustering </u>
 In this part of the Project we implement the K-medians algorithms via 3 different ways:
@@ -88,7 +99,23 @@ The [src](src) directory contains sub-directories with .cpp files. Again, their 
 <br> </br>
 
 ### How ANN is implemented
-ToDo dimitris?????????????????????/
+1. <u>LSH</u>
+The code for LSH can be found under the [include/LSH](include/LSH) directory. It contains two files, [include/LSH/LSH.hpp](include/LSH/LSH.hpp) and [include/LSH/LSHFun.hpp](include/LSH/LSHFun.hpp).
+    1. [include/LSH/LSHFun.hpp](include/LSH/LSHFun.hpp)
+        1. HashFunction is used to represent the "h" function in which an item is at first shifted and then applied the following fomula: <br> h(p)=a<sub>d-1</sub>+m*a<sub>d-2</sub>+...+m<sup>d-1</sup>*a<sub>0</sub>
+        2. AmplifiedHashFunction represents the "g" function which "combines" k number of "h" functions by concatenating bitwise their results.
+    2. [include/LSH/LSH.hpp](include/LSH/LSH.hpp)
+        1. LSH is used to combine the aforementioned HashFunction and AmplifiedHashFunction, it represents the entire LSH data structure. It contains L hash tables, which have their respective amplified hash functions to map items into buckets. This class contains the methods kNN and rangeSearch.
+            1. kNN searches for the k (given as argument) nearest neighbors of the query input. At first, it hashes the query with each amplified hash function, it then searches inside the respective buckets (to which "query" is mapped) of each hash table. It returns a sorted array (on ascending distance) of pairs of distance and item.
+            2. rangeSearch is similar to kNN. It searches inside the same buckets as kNN however, it appends to an array (similar to the one used in kNN) every item which has a distance from the query item of less than R (given as argument).
+2. <u>Hypercube</u>
+The code for the randomized projection to a hypercube can found under [include/Hypercube](include/Hypercube). It contains one file:
+    1. [include/Hypercube/Hypercube.hpp](include/Hypercube/Hypercube.hpp)
+        1. FFunc is used to represent the "f" function in which the result of an "h" function (implemented in [include/LSH/LSHFun.hpp](include/LSH/LSHFun.hpp) as HashFunction) is mapped to {0,1}. When initialized, a random integer is created within range (min, max) (given as arguments). Whenever an "h" value arrives, if that h value is less than the random integer, 0 is returned, else, 1 is returned.
+        2. Hypercube combines [include/LSH/LSHFun.hpp](include/LSH/LSHFun.hpp)->HashFunction and FFunc to implement a Hypercube whose vertices contain items. Whenever an item arrives, all "h" and "f" function values are calculated. From that, a vector of {0,1} is constructed (represented as an integer) which is the vertex of the hypercube. This class also contains kNN and rangeSearch methods.
+            1. kNN takes in 4 arguments: a query item, k (how many neighbors to be returned), probes (how many vertices to search), thresh(old) (how many total items to search). Until the probe and thresh end, starting from vertices with hamming distance = 0 (the startingVertex itself), then with hamming distance = 1 (the vertices next to startingVertex who only differ by one bit) etc. we search the whole vertex to find the k most similar vertices. This returns a sorted array (on ascending distance) of pairs of distance and item.
+            2. rangeSearch instead of k, it takes in R as an argument which is the maximum distance an item to be returned must have. The probes are traversed in the same way as kNN, only this time, instead of searching for the k most similar, all items which are inside the "ball" created by R are returned (with their respective distances)
+
 <br> </br>
 
 ### How Clustering is implemented
