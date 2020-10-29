@@ -136,7 +136,7 @@ public:
     std::vector<double> timeVec;
     std::vector<std::vector<int>> rsIdVec;
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < query.number_of_images; i++) {
       std::vector<int> tmpNVec;
       std::vector<double> tmpDistVec;
 
