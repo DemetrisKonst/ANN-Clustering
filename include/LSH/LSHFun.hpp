@@ -10,20 +10,17 @@
 
 template <typename T>
 class HashFunction {
-  double averageDistance;
-  int windowConstant;       // constant to get windowSize = windowConstant*averageDistance
   int functionAmount;       // number of H functions for g
   int dimension;            // dimension
-  int windowSize;               // windowSize = windowConstant*averageDistance >> averageDistance
+  int windowSize;           // windowSize = windowConstant*averageDistance >> averageDistance
   int modularConstant;      // modularConstant = 2^(32/functionAmount)
 
   int* randomShift;
   int* mmodM_values;
 
 public:
-  HashFunction (double avg, int c, int k, int d, int* mmod):
-  averageDistance(avg), windowConstant(c), functionAmount(k), dimension(d), mmodM_values(mmod) {
-    windowSize = (int) windowConstant*averageDistance;
+  HashFunction (int ws, int k, int d, int* mmod):
+  windowSize(ws), functionAmount(k), dimension(d), mmodM_values(mmod) {
     modularConstant = pow(2, 32/functionAmount);
 
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -59,19 +56,15 @@ template <typename T>
 class AmplifiedHashFunction {
 private:
   std::vector<HashFunction<T>> H;
-  double averageDistance;
-  int windowConstant;            // constant to get windowSize = windowConstant*averageDistance
   int functionAmount;            // number of H functions for g
   int dimension;            // dimension
   int windowSize;
 
 public:
-  AmplifiedHashFunction (double avg, int c, int k, int d, int* mmod):
-  averageDistance(avg), windowConstant(c), functionAmount(k), dimension(d){
-    windowSize = windowConstant*averageDistance;
-
+  AmplifiedHashFunction (int ws, int k, int d, int* mmod):
+  windowSize(ws), functionAmount(k), dimension(d){
     for (int i = 0; i < functionAmount; i++) {
-      H.push_back(HashFunction<T>(averageDistance, windowConstant, functionAmount, dimension, mmod));
+      H.push_back(HashFunction<T>(windowSize, functionAmount, dimension, mmod));
     }
   }
 

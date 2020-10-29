@@ -39,7 +39,12 @@ int main(int argc, char const *argv[]) {
 
   /* initialize the data structures */
   BruteForce<uint8_t> bf = BruteForce<uint8_t>(data);
-  Hypercube<uint8_t> hc = Hypercube<uint8_t>(hc_input, data, 10000);
+  /* calculate the window size (or set it to a default value) */
+  // double averageItemDistance = bf.averageDistance(0.05);
+  // int windowConstant = 4;
+  // int windowSize = (int) windowConstant*averageItemDistance;
+  int windowSize = 40000;
+  Hypercube<uint8_t> hc = Hypercube<uint8_t>(hc_input, data, windowSize);
 
 
   /* get the query set and and output file, in case they are not provided by the command line parameters */

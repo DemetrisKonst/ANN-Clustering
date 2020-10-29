@@ -17,14 +17,14 @@ private:
   int dimension;           //dimension
   int functionAmount;      //number of hash functions for each amplified hash function
   int htAmount;            //number of hash tables
-  double averageItemDistance;
+  int windowSize;
   unsigned long int mConstant;
 
   std::vector<Item<T>*>** H;
   AmplifiedHashFunction<T>** g;
 
 public:
-  LSH (interface::input::LSH::LSHInput& lshi, const interface::Data<T>& ds, double avg) : averageItemDistance(avg) {
+  LSH (interface::input::LSH::LSHInput& lshi, const interface::Data<T>& ds, int ws) : windowSize(ws) {
     functionAmount = lshi.k;
     htAmount = lshi.L;
     imageCount = ds.n;
@@ -44,7 +44,7 @@ public:
 
 
     for (int i = 0; i < htAmount; i++) {
-      g[i] = new AmplifiedHashFunction<T>(averageItemDistance, 4, functionAmount, dimension, mmod);
+      g[i] = new AmplifiedHashFunction<T>(windowSize, functionAmount, dimension, mmod);
 
       H[i] = new std::vector<Item<T>*>[htSize];
       for (int j = 0; j < htSize; j++) {
