@@ -38,7 +38,12 @@ int main(int argc, char const *argv[]) {
 
   /* initialize the data structures */
   BruteForce<uint8_t> bf = BruteForce<uint8_t>(data);
-  LSH<uint8_t> lsh = LSH<uint8_t>(lsh_input, data, 10000);
+  /* calculate the window size (or set it to a default value) */
+  // double averageItemDistance = bf.averageDistance(0.05);
+  // int windowConstant = 4;
+  // int windowSize = (int) windowConstant*averageItemDistance;
+  int windowSize = 40000;
+  LSH<uint8_t> lsh = LSH<uint8_t>(lsh_input, data, windowSize);
 
 
   /* get the query set and and output file, in case they are not provided by the command line parameters */
@@ -89,21 +94,4 @@ int main(int argc, char const *argv[]) {
   /* free the training dataset and return, as we have finished */
   interface::freeDataset(dataset);
   return 0;
-
-
-
-  // BruteForce<uint8_t> bf = BruteForce<uint8_t>(data);
-  // clock_t begin = clock();
-  // double averageItemDistance = bf.averageDistance(0.05);
-  // clock_t end = clock();
-  // double elapsed = double(end - begin) / CLOCKS_PER_SEC;
-  // std::cout << "avgItemDist: " << averageItemDistance << '\n';
-  // std::cout << "Time for avgItemDist: " << elapsed << '\n';
-  // bf.buildOutput(output, queries, lsh_input.N);
-
-  // LSH<uint8_t> lsh = LSH<uint8_t>(lsh_input, data, 10000);
-  // lsh.buildOutput(output, queries, lsh_input.N, lsh_input.R);
-
-  // interface::output::writeOutput(files.output_file, output, status);
-
 }
