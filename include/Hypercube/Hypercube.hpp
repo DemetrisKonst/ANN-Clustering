@@ -277,7 +277,7 @@ public:
   The following function creates a KNNOutput object.
   This object contains all information required to create the output file.
   This is used only on ANN (not clustering) and also requires that its brute force
-  counterpart will be executed (so as to compare times and distances)
+  counterpart will be executed (so as to compare times and distances).
   */
   void buildOutput (interface::output::KNNOutput& output, interface::Dataset& query, int N, double R, int probes, int thresh = 0) {
     // A vector of all neighbors' ids returned by kNN for each query item
@@ -331,7 +331,7 @@ public:
       rsIdVec.push_back(tmpRsVec);
     }
 
-    // Set the following KNNOutput's attributes to the vectors created above 
+    // Set the following KNNOutput's attributes to the vectors created above
     output.n_neighbors_id = neighborIdVec;
     output.approx_distance = distVec;
     output.approx_time = timeVec;

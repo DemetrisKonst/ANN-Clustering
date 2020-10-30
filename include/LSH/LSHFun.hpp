@@ -114,7 +114,7 @@ public:
 
   unsigned int HashVector (T* x) {
     // Initialize a vector of values returned by each HashFunction
-    std::vector<int> hValues;
+    std::vector<uint8_t> hValues;
 
     // Calculate the values and insert them to the vector
     for (int i = 0; i < functionAmount; i++) {
