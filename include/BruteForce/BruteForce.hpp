@@ -28,6 +28,10 @@ public:
     items = ds.items;
   }
 
+  ~BruteForce () {
+
+  }
+
   /*
   Method to calculate the averageDistance between a portion of the items.
   This is used to calculate a "proper" window size for LSH & Hypercube
@@ -80,6 +84,8 @@ public:
       */
       if (distance < d[N-1].first) {
         d[N-1].first = distance;
+        if (d[N-1].second->null)
+          delete d[N-1].second;
         d[N-1].second = items[i];
         std::sort(d.begin(), d.end(), comparePairs<T>);
       }

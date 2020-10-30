@@ -41,6 +41,13 @@ private:
   // Each hash table has its respective AmplifiedHashFunction
   AmplifiedHashFunction<T>** g;
 
+  /*
+  The following attributes are used in HashFunction.
+  More details about them can be found there.
+  */
+  unsigned int mConstant;
+  int* m_mod_MValues;
+
 public:
   LSH (interface::input::LSH::LSHInput& lshi, const interface::Data<T>& ds, int ws) : windowSize(ws) {
     functionAmount = lshi.k;
@@ -57,17 +64,17 @@ public:
     htSize = imageCount/div;
 
     // Calculate the m mod M values, these are used in HashFunction to calculate the return value
-    unsigned int mConstant = pow(2, 32) - 5;
-    int* mmod = new int[dimension];
+    mConstant = pow(2, 32) - 5;
+    m_mod_MValues = new int[dimension];
     for (int b = 0; b < dimension; b++)
-    mmod[b] = utils::modEx(mConstant, dimension-b-1, pow(2, 32/functionAmount));
+      m_mod_MValues[b] = utils::modEx(mConstant, dimension-b-1, pow(2, 32/functionAmount));
 
     // Initialize htAmount hash tables and AmplifiedHashFunctions
     H = new std::vector<Item<T>*>*[htAmount];
     g = new AmplifiedHashFunction<T>*[htAmount];
 
     for (int i = 0; i < htAmount; i++) {
-      g[i] = new AmplifiedHashFunction<T>(windowSize, functionAmount, dimension, mmod);
+      g[i] = new AmplifiedHashFunction<T>(windowSize, functionAmount, dimension, m_mod_MValues);
 
       H[i] = new std::vector<Item<T>*>[htSize];
       for (int j = 0; j < htSize; j++) {
@@ -86,6 +93,16 @@ public:
       if ((a+1)%10000 == 0)
         std::cout << "LSH: " << a+1 << " items..." << '\n';
     }
+  }
+
+  ~LSH () {
+    for (int i = 0; i < htAmount; i++) {
+      delete[] H[i];
+      delete g[i];
+    }
+    delete[] H;
+    delete[] g;
+    delete[] m_mod_MValues;
   }
 
   /*
@@ -131,6 +148,8 @@ public:
         */
         if (distance < d[N-1].first) {
           d[N-1].first = distance;
+          if (d[N-1].second->null)
+            delete d[N-1].second;
           d[N-1].second = H[i][bucket][j];
           std::sort(d.begin(), d.end(), comparePairs<T>);
         }

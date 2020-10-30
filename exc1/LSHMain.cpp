@@ -42,7 +42,7 @@ int main(int argc, char const *argv[]) {
   // double averageItemDistance = bf.averageDistance(0.05);
   // int windowConstant = 4;
   // int windowSize = (int) windowConstant*averageItemDistance;
-  int windowSize = 40000;
+  int windowSize = 10000;
   LSH<uint8_t> lsh = LSH<uint8_t>(lsh_input, data, windowSize);
 
 
