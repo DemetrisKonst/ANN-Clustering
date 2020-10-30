@@ -44,10 +44,10 @@ private:
   // the window size inserted by the user, it is used inside HashFunction to shift the items
   int windowSize;
 
-  // Vector of f functions
-  std::vector<FFunction> mapFun;
-  // Vector of h functions
-  std::vector<HashFunction<T>> LSHFun;
+  // Array of f functions
+  FFunction** mapFun;
+  // Array of h functions
+  HashFunction<T>** LSHFun;
 
   /*
   The data structure in which the items are stored.
@@ -58,6 +58,8 @@ private:
   */
   std::vector<Item<T>*>* H;
 
+  unsigned int mConstant;
+  int* m_mod_MValues;
   /*
   Calculate f(h(x)) for every dimension in the Hypercube.
   Then create an integer of HCDimension bits while shifting and inserting
@@ -67,8 +69,8 @@ private:
     int vertex = 0;
 
     for (int i = 0; i < HCDimension; i++) {
-      int hashRes = LSHFun[i].HashVector(x);
-      int mapRes = mapFun[i].map(hashRes);
+      int hashRes = LSHFun[i]->HashVector(x);
+      int mapRes = mapFun[i]->map(hashRes);
 
       if (mapRes == 1) {
         vertex |= 1;
@@ -159,15 +161,17 @@ public:
     Calculate all m^b powers once to pass them to all HashFunction instances
     so as to not calculate them each time.
     */
-    unsigned int mConstant = pow(2, 32) - 5;
-    int* mmod = new int[dataDimension];
+    mConstant = pow(2, 32) - 5;
+    m_mod_MValues = new int[dataDimension];
     for (int b = 0; b < dataDimension; b++)
-      mmod[b] = utils::modEx(mConstant, dataDimension-b-1, pow(2, 32/HCDimension));
+      m_mod_MValues[b] = utils::modEx(mConstant, dataDimension-b-1, pow(2, 32/HCDimension));
 
     // Initialize HCDimension HashFunctions and FFunctions
+    LSHFun = new HashFunction<T>*[HCDimension];
+    mapFun = new FFunction*[HCDimension];
     for (int i = 0; i < HCDimension; i++) {
-      LSHFun.push_back(HashFunction<T>(windowSize, HCDimension, dataDimension, mmod));
-      mapFun.push_back(FFunction(100, 200));
+      LSHFun[i] = new HashFunction<T>(windowSize, HCDimension, dataDimension, m_mod_MValues);
+      mapFun[i] = new FFunction(100, 200);
     }
 
     // For every item given by the input set, add it to its respective vertex
@@ -176,8 +180,19 @@ public:
       H[vertex].push_back(items[i]);
 
       if ((i+1)%10000 == 0)
-        std::cout << i+1 << " items..." << '\n';
+        std::cout << "Hypercube: " <<  i+1 << " items..." << '\n';
     }
+  }
+
+  ~Hypercube () {
+    for (int i = 0; i < HCDimension; i++) {
+      delete LSHFun[i];
+      delete mapFun[i];
+    }
+    delete[] LSHFun;
+    delete[] mapFun;
+    delete[] H;
+    delete[] m_mod_MValues;
   }
 
   /*
@@ -212,6 +227,8 @@ public:
         */
         if (distance < d[N-1].first) {
           d[N-1].first = distance;
+          if (d[N-1].second->null)
+            delete d[N-1].second;
           d[N-1].second = avProbes[i][j];
           std::sort(d.begin(), d.end(), comparePairs<T>);
         }

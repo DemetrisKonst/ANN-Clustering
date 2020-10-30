@@ -53,6 +53,10 @@ public:
     }
   }
 
+  ~HashFunction () {
+    delete[] randomShift;
+  }
+
   /*
   The following method hashes the vector by calculating the aforementioned sum.
   It is calculated through modular exponentiation (as the huge values would cause an overflow).
@@ -101,15 +105,22 @@ private:
   // Window size entered by the user
   int windowSize;
 
-  // Vector of HashFunctions
-  std::vector<HashFunction<T>> H;
+  // Array of HashFunctions
+  HashFunction<T>** H;
 
 public:
   AmplifiedHashFunction (int ws, int k, int d, int* mmod) : windowSize(ws), functionAmount(k), dimension(d){
     // Initialize k HashFunctions
+    H = new HashFunction<T>*[functionAmount];
     for (int i = 0; i < functionAmount; i++) {
-      H.push_back(HashFunction<T>(windowSize, functionAmount, dimension, mmod));
+      H[i] = new HashFunction<T>(windowSize, functionAmount, dimension, mmod);
     }
+  }
+
+  ~AmplifiedHashFunction () {
+    for (int i = 0; i < functionAmount; i++)
+      delete H[i];
+    delete[] H;
   }
 
   unsigned int HashVector (T* x) {
@@ -118,7 +129,7 @@ public:
 
     // Calculate the values and insert them to the vector
     for (int i = 0; i < functionAmount; i++) {
-      hValues.push_back(H[i].HashVector(x));
+      hValues.push_back(H[i]->HashVector(x));
     }
 
     // Produce the final value by concatenating bitwise the values of the array

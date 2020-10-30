@@ -95,18 +95,4 @@ int main(int argc, char const *argv[]) {
   /* free the training dataset and return, as we have finished */
   interface::freeDataset(dataset);
   return 0;
-
-  // BruteForce<uint8_t> bf = BruteForce<uint8_t>(data);
-  // clock_t begin = clock();
-  // double averageItemDistance = bf.averageDistance(0.05);
-  // clock_t end = clock();
-  // double elapsed = double(end - begin) / CLOCKS_PER_SEC;
-  // std::cout << "avgItemDist: " << averageItemDistance << '\n';
-  // std::cout << "Time for avgItemDist: " << elapsed << '\n';
-  // bf.buildOutput(output, queries, lsh_input.N);
-
-  // LSH<uint8_t> lsh = LSH<uint8_t>(lsh_input, data, 10000);
-  // lsh.buildOutput(output, queries, lsh_input.N, lsh_input.R);
-
-  // interface::output::writeOutput(files.output_file, output, status);
 }
