@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-O3
 
 # used to compile all programs
-# ALL: CLUSTER HC LSH
+ALL: CLUSTER HC LSH
 
 # compile clustering
 CLUSTER: ClusterMain clusteringInterface.o interface_utils.o interface.o

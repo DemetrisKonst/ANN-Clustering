@@ -505,6 +505,7 @@ namespace clustering
         Item<T>* item = data.items[i];
 
         /* set it to unmarked */
+        item->staged = false;
         item->marked = false;
       }
     }
@@ -870,7 +871,8 @@ namespace clustering
           _Reverse_Assignment(data, method);
         }
 
-        // for (int c = 0; c < 3; c++)
+        // /* print the centroids to see that they look like */
+        // for (int c = 0; c < K; c++)
         // {
         //   centers[c]->print_centroid();
         //   interface::output::printImage(centers[c]->get_components(), 28, 28);
@@ -880,7 +882,7 @@ namespace clustering
         _update_step(&center_changed);
 
         iterations++;
-        std::cout << "iterations = " << iterations << '\n';
+        // std::cout << "iterations = " << iterations << '\n';
       }
 
       /* variable used to mark the end of execution */

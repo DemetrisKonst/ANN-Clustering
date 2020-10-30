@@ -15,14 +15,14 @@ Thus, the Project is split in two parts, the first one solves the (ANN) problem 
 <br> </br>
 
 ## A little bit about our Dataset
-The Datasets used to test the correctness of our algorithms is the *MNIST Database of handwritten digits*, and be found [here](http://yann.lecun.com/exdb/mnist/). This database contains images of size 28 x 28 pixels, that is, 784 pixels if we flatten the image (spoiler alert: we do). The Training set consists of 60000 images, and the test set of 10000. Note that the images are stored in Big-Endian format. Our code makes sure that they are converted to Little-Endian. 
+The Datasets used to test the correctness of our algorithms is the *MNIST Database of handwritten digits*, and be found [here](http://yann.lecun.com/exdb/mnist/). This database contains images of size 28 x 28 pixels, that is, 784 pixels if we flatten the image (spoiler alert: we do). The Training set consists of 60000 images, and the test set of 10000. Note that the images are stored in Big-Endian format. Our code makes sure that they are converted to Little-Endian.
 <br> </br>
 
 
 ## <u> Approximate Nearest Neighbors (ANN) </u>
 Approximate Nearest Neighbors (or ANN) is a problem in which we want to search for similar items, without enduring the huge cost of a brute force algorithm. The program implements two data structures which drastically reduce time complexity, while also retaining respectable accuracy. The data structures are the following:
 - Locality Sensitive Hashing: Hash table which maps nearby items to the same bucket
-- Randomized Projection Hypercube: Hypercube which maps similar items to the same (or nearby) vertices 
+- Randomized Projection Hypercube: Hypercube which maps similar items to the same (or nearby) vertices
 
 ### Locality Sensitive Hashing (LSH)
 Locality Sensitive Hashing is an algorithmic technique that hashes similar input items into the same buckets with high probability. The layers in which this algorithm is implemented are the following:
@@ -123,7 +123,7 @@ The code for the Clustering part can be found in the file [include/Clustering/cl
 1. A struct **ClusterCenter**, used to represent a centroid and the vectors in its cluster.
 2. A class **Clustering**, used to provide and interface between the different methods in the clustering procedure.
 
-In our Dataset, the data points are grayscale images of size 28x28. The images are flattened to an array of size 28 x 28 = 784 pixels (or bytes). Thus, in our case, the vectors contain pixels (unsigned chars == uint8_t), but this can change since we have used templates. 
+In our Dataset, the data points are grayscale images of size 28x28. The images are flattened to an array of size 28 x 28 = 784 pixels (or bytes). Thus, in our case, the vectors contain pixels (unsigned chars == uint8_t), but this can change since we have used templates.
 
 When the constructor of a Clustering object is called, the centroids get initialized with the method initialization++. After that, we can call the method Clustering::perform_clustering() with the correct parameters to begin one of the clustering algorithms descriven above. Then, we can call the method Clustering::compute_average_silhouette() to compute the Silhouette values from the Clustering that has been produced.
 
@@ -140,7 +140,7 @@ The are 4 options when compiling the code.
     ```bash
     $ make LSH
     ```
-    
+
 2. To compile the Hypercube code:
 
     ```bash
@@ -154,7 +154,7 @@ The are 4 options when compiling the code.
 
 4. To compile all of the above:
     ```bash
-    $ make
+    $ make ALL
     ```
 
 Here are some examples on how to run the compiled code:
@@ -202,7 +202,7 @@ Here are some examples on how to run the compiled code:
     - c = ./conf/cluster.conf, the path to the configuration file
     - o = ./output/lsh_output.txt, the path to the output file
     - complete, flag given to log more information
-    - m = LSH, the method to perform the Clustering with (available options are: Classic, LSH, Hypercube) 
+    - m = LSH, the method to perform the Clustering with (available options are: Classic, LSH, Hypercube)
     ```bash
     $ ./bin/cluster -d ./Dataset/train-images-idx3-ubyte
                     -c ./conf/cluster.conf

@@ -53,29 +53,8 @@ int main(int argc, char const *argv[]) {
   interface::output::clustering::writeOutput(files.output_file, output, status);
 
 
-  // /* get the vectors that got mapped in cluster 3 */
-  // uint16_t target_cluster = 3;
-  // std::vector<Item<uint8_t>*>* vectors_in_cluster = cluster.get_vectors_in_cluster(target_cluster);
-  //
-  // /* print some of the images in it */
-  // for (int i = 0; i < 10; i++)
-  // {
-  //   /* get the Item as a variable */
-  //   Item<uint8_t>* item = (*vectors_in_cluster)[i];
-  //   long int index = item->id;
-  //
-  //   /* log some information */
-  //   std::cout << "Image: " << index << "\n\n";
-  //   /* print the image */
-  //   interface::output::printImage(item->data, dataset2.rows_per_image, dataset2.columns_per_image);
-  //   std::cout << "\n\n";
-  // }
-
-
   /* free up the allocated space and return */
   interface::freeDataset(dataset);
   cluster.free_output_object_memory(output);
-
-
   return 0;
 }
