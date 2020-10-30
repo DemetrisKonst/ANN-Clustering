@@ -1,8 +1,13 @@
 #pragma once
 
 namespace utils {
-  unsigned long int concatenateBitwise (std::vector<uint8_t> n) {
-    unsigned long int finalNum = n[0];
+  /*
+  Helper function which takes in a vector of uint8_t and concatenates them bitwise
+  to return an unsigned int.
+  Used in AmplifiedHashFunction in LSHFun.hpp
+  */
+  unsigned int concatenateBitwise (std::vector<uint8_t> n) {
+    unsigned int finalNum = n[0];
 
     for (int i = 1; i < n.size(); i++) {
       finalNum <<= 8;
@@ -12,6 +17,11 @@ namespace utils {
     return finalNum;
   }
 
+  /*
+  Helper function which takes in a base, a power and a constant
+  to calculate (base^power) mod M. It uses the modular exponentiation algorithm to avoid overflow.
+  Used in LSH & Hypercube to calculate the mmodM values
+  */
   int modEx (unsigned long int base, unsigned long int power, int M) {
     if (power == 0){
       return 1;
