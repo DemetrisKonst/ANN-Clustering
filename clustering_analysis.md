@@ -24,7 +24,7 @@ The results presented below are averaged over 25 runs for each algorithm separat
 
 - Number of Clusters **K**
 
-    We know a priori that the Dataset consists of 10 different "groups" of data points (digits). Therefore, an optimal value for the number of clusters **K** would be 10. Though it would be a nice idea to experiment with this number in order to see how the silhouette changes. This experiment in implemented in this main cpp file [here](exc2/ExperimentalClusterMain.cpp)
+    We know a priori that the Dataset consists of 10 different "groups" of data points (digits). Therefore, an optimal value for the number of clusters **K** would be 10. Though it would be a nice idea to experiment with this number in order to see how the silhouette changes. This experiment in implemented is this main cpp file [here](exc2/ExperimentalClusterMain.cpp).
 
     - **K** = 8
 
