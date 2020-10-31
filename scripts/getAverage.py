@@ -68,7 +68,7 @@ def main():
 
         print("Mean Distance Search Algo:", daSum/int(sys.argv[2]))
         print("Mean Distance Search BF:", dtSum/int(sys.argv[2]))
-        print("Distance Ratio: ", dtSum/daSum)
+        print("Accuracy: ", (dtSum/daSum)*100, "%")
 
     outputFile.close()
 

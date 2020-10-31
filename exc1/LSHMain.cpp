@@ -36,13 +36,17 @@ int main(int argc, char const *argv[]) {
   interface::Data<uint8_t> data(dataset);
 
 
-  /* initialize the data structures */
+  // Initialize Brute Force
   BruteForce<uint8_t> bf = BruteForce<uint8_t>(data);
-  /* calculate the window size (or set it to a default value) */
-  // double averageItemDistance = bf.averageDistance(0.05);
-  // int windowConstant = 4;
-  // int windowSize = (int) windowConstant*averageItemDistance;
-  int windowSize = 10000;
+
+  // Calculate the window size (or set it to a default value)
+  double averageItemDistance = utils::averageDistance<uint8_t>(0.05, data.items, data.n, data.dimension);
+  int windowConstant = 1;
+  int windowSize = (int) windowConstant*averageItemDistance;
+  // int windowSize = 40000;
+  // std::cout << "Window Size: " << windowSize << '\n';
+
+  // Initialize LSH
   LSH<uint8_t> lsh = LSH<uint8_t>(lsh_input, data, windowSize);
 
 
