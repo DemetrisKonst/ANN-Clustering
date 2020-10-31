@@ -324,7 +324,7 @@ int interface::output::clustering::writeOutput(const std::string& outfile_name, 
   }
 
   /* log information about clustering time */
-  outfile << "clustering_time: " << output.clustering_time / 1000000 << std::endl;
+  outfile << "clustering_time: " << output.clustering_time << std::endl;
 
   /* log information about silhouettes */
   outfile << "Silhouette: [";
