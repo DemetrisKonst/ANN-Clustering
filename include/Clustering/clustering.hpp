@@ -30,6 +30,7 @@ namespace clustering
   struct ClusterCenter
   {
     uint16_t dimension;
+    T* initial_components;
     T* components;
     std::vector<Item<T>*>* vectors_in_cluster;
     double silhouette;
@@ -38,9 +39,18 @@ namespace clustering
     /* constructor */
     ClusterCenter(const T* x, const uint16_t& d): dimension(d)
     {
+      /* initialize the silhouette */
       silhouette = std::numeric_limits<double>::lowest();
+
+      /* initialize an array that will store the initial components assigned to the centroid */
+      initial_components = new T[dimension];
+      std::memcpy(initial_components, x, sizeof(T) * dimension);
+
+      /* initialize an array that will store the current components of the centroid */
       components = new T[dimension];
       std::memcpy(components, x, sizeof(T) * dimension);
+
+      /* initialize a vector that will contain all the data points (items) inside the cluster */
       vectors_in_cluster = new std::vector<Item<T>*>;
     }
 
@@ -48,6 +58,8 @@ namespace clustering
     /* destructor */
     ~ClusterCenter(void)
     {
+      /* free allocated memory */
+      delete[] initial_components;
       delete[] components;
       delete vectors_in_cluster;
     }
@@ -109,7 +121,7 @@ namespace clustering
 
 
     /* method used to compute the new cluster center from the data points in the cluster; returns true if the center changes; else false */
-    void compute_new_center_from_data(bool* center_changed, const double& tolerance=3000)
+    void compute_new_center_from_data(bool* center_changed, const double& tolerance=3000, const metrics::Metric& metric=metrics::MANHATTAN)
     {
       /* create the new center */
       T* new_center = new T[dimension];
@@ -135,8 +147,41 @@ namespace clustering
 
       }
 
+      /* compute the distance of the new centroid to the old one */
+      double distance = 0;
+      /* see which metric to use for the distance */
+      switch (metric)
+      {
+        case metrics::MANHATTAN:
+        {
+          distance = metrics::ManhattanDistance(components, new_center, dimension);
+          break;
+        }
+        case metrics::EUCLIDEAN:
+        {
+          distance = metrics::EuclideanDistance(components, new_center, dimension);
+          break;
+        }
+        case metrics::MAX:
+        {
+          distance = metrics::MaxDistance(components, new_center, dimension);
+          break;
+        }
+        case metrics::NON_ZERO:
+        {
+          distance = metrics::nonZeroDistance(components, new_center, dimension);
+          break;
+        }
+        default:
+        {
+          std::cout << "Unknown metric in ClusterCenter::compute_new_center_from_data().\n";
+          break;
+        }
+      }
+
+
       /* if the new centroid differs by only a little, consider it as unchanged; else change it */
-      if (metrics::ManhattanDistance(new_center, components, dimension) > tolerance)
+      if (distance > tolerance)
       {
         *center_changed = true;
       }
@@ -146,6 +191,24 @@ namespace clustering
 
       /* assign the new value */
       components = new_center;
+    }
+
+
+    /* method that resets a cluster center back to its original state */
+    void reset_cluster_center(void)
+    {
+      /* free the memory for the current components */
+      delete[] components;
+
+      /* allocate again memory to reinitialize the components */
+      components = new T[dimension];
+      std::memcpy(components, initial_components, sizeof(T) * dimension);
+
+      /* remove the items that were inside the cluster */
+      clear_cluster_center();
+
+      /* reset the silhouette */
+      silhouette = std::numeric_limits<double>::lowest();
     }
 
 
@@ -459,8 +522,9 @@ namespace clustering
         lsh_input.L = LSH_L;
         radius = lsh_input.R / 2;
 
-        /* initialize the LSH object */
-        lsh = new LSH<T>(lsh_input, data, 5000);
+        /* initialize the LSH object (note that 33000 was found as the averagr distance for the MNIST digit Dataset,
+           but this parameter can be changed) */
+        lsh = new LSH<T>(lsh_input, data, 4000);
       }
       else if (method == "Hypercube")
       {
@@ -479,7 +543,7 @@ namespace clustering
         radius = hc_input.R / 2;
 
         /* initialize the LSH object */
-        hypercube = new Hypercube<T>(hc_input, data, 5000);
+        hypercube = new Hypercube<T>(hc_input, data, 4000);
       }
     }
 
@@ -837,14 +901,14 @@ namespace clustering
       /* keep a flag that will be used to determine whether a change was made to any cluster center */
       bool center_changed = true;
 
-      /* variable used to remeber the start of the execution time */
-      auto start = std::chrono::high_resolution_clock::now();
-
       /* see if we have to use a Reverse assignment method, and if yes initialize the corresponding object */
       if (method == "LSH" || method == "Hypercube")
       {
         _initialize_data_structures(data, method);
       }
+
+      /* variable used to remeber the start of the execution time */
+      auto start = std::chrono::high_resolution_clock::now();
 
       int iterations = 0;
 
@@ -889,7 +953,7 @@ namespace clustering
       auto end = std::chrono::high_resolution_clock::now();
 
       /* compute the time it took for the clustering */
-      *duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+      *duration = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()) / ((double) 1000000);
     }
 
 
@@ -924,6 +988,22 @@ namespace clustering
 
       /* return the result */
       return average_silhouette;
+    }
+
+
+    /* method that resets a cluster back to its initialized state */
+    void reset_clusters(void)
+    {
+      /* reset the radius and silhouettes */
+      radius = 0.0;
+      silhouette = 0.0;
+      silhouettes->clear();
+
+      /* reset all the cluster centers */
+      for (int c = 0; c < K; c++)
+      {
+        centers[c]->reset_cluster_center();
+      }
     }
 
 

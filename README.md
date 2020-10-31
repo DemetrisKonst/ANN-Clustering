@@ -52,7 +52,7 @@ Every algorithm consists of the same 2 steps:
 1. Assignment (Expectation): Assign each object to its nearest center.
 2. Update (Maximization): Calculate Median of each dimension per cluster and make it new center.
 
-Note that the second step is the same for every algorithm.
+Note that the second step is the same for every algorithm. These steps keep repeating until no change or small change is made in the centroids.
 
 ### **Lloyds Algorithm**
 Lloyds Algorithm is basically the brute-force approach to the Clustering Problem.
