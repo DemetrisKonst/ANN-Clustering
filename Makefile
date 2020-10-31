@@ -9,7 +9,7 @@ CLUSTER: ClusterMain clusteringInterface.o interface_utils.o interface.o
 	$(CC) -o bin/cluster object/ClusterMain.o object/clustering_interface.o object/interface_utils.o object/interface.o $(CFLAGS)
 
 ClusterMain:
-	$(CC) -c -o object/ClusterMain.o exc2/ClusterMain.cpp $(CFLAGS)
+	$(CC) -c -o object/ClusterMain.o Clustering/ClusterMain.cpp $(CFLAGS)
 
 clusteringInterface.o:
 	$(CC) -c -o object/clustering_interface.o src/interfaces/clustering_interface.cpp $(CFLAGS)
@@ -19,7 +19,7 @@ HC: HCMain HCInterface.o interface_utils.o interface.o
 	$(CC) -o bin/cube object/HCMain.o object/HCInterface.o object/interface_utils.o object/interface.o $(CFLAGS)
 
 HCMain:
-	$(CC) -c -o object/HCMain.o exc1/HCMain.cpp $(CFLAGS)
+	$(CC) -c -o object/HCMain.o ANN/HCMain.cpp $(CFLAGS)
 
 HCInterface.o:
 	$(CC) -c -o object/HCInterface.o src/interfaces/HC_interface.cpp $(CFLAGS)
@@ -29,7 +29,7 @@ LSH: LSHMain LSHInterface.o interface_utils.o interface.o
 	$(CC) -o bin/lsh object/LSHMain.o object/LSH_interface.o object/interface_utils.o object/interface.o $(CFLAGS)
 
 LSHMain:
-	$(CC) -c -o object/LSHMain.o exc1/LSHMain.cpp $(CFLAGS)
+	$(CC) -c -o object/LSHMain.o ANN/LSHMain.cpp $(CFLAGS)
 
 LSHInterface.o:
 	$(CC) -c -o object/LSH_interface.o src/interfaces/LSH_interface.cpp $(CFLAGS)
