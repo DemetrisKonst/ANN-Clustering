@@ -75,9 +75,9 @@ Again, the steps are pretty much similar.
 ### How the Repository is organized
 The main directory contains the entities:
 - [bin](bin): Target directory where binary files (executables) are placed
-- [conf](conf): Directory that contains configuration files for the Clustering Algorithms.
-- [exc1](exc1): Directory that contains the main .cpp files of LSH and Hypercube programs.
-- [exc2](exc2): Directory that contains the main .cpp file of the Clustering program.
+- [config](config): Directory that contains configuration files for the Clustering Algorithms.
+- [ANN](ANN): Directory that contains the main .cpp files of LSH and Hypercube programs.
+- [Clustering](Clustering): Directory that contains the main .cpp file of the Clustering program.
 - [include](include): Directory that contains the libraries (.h files) used in both parts of the Project. More on this directory in a bit.
 - [object](object): Directory that contains the Object (compiled) files that are created during compilation.
 - [output](output): Directory that contains output .txt files.
@@ -127,7 +127,7 @@ In our Dataset, the data points are grayscale images of size 28x28. The images a
 
 When the constructor of a Clustering object is called, the centroids get initialized with the method initialization++. After that, we can call the method Clustering::perform_clustering() with the correct parameters to begin one of the clustering algorithms descriven above. Then, we can call the method Clustering::compute_average_silhouette() to compute the Silhouette values from the Clustering that has been produced.
 
-You can take a look at the [main](exc2/ClusterMain.cpp) function for the Clustering, to get a taste of how it works.
+You can take a look at the [main](Clustering/ClusterMain.cpp) function for the Clustering, to get a taste of how it works.
 <br> </br>
 
 
@@ -215,3 +215,5 @@ To remove the objective and the executable files, just give the command
 ```bash
 $ make clean
 ```
+
+GitHub Repository: https://github.com/DemetrisKonst/ANN-Clustering
