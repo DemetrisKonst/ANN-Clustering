@@ -22,7 +22,7 @@ void interface::ScanInput(interface::IOFiles& files, interface::ExitCode& status
     std::cin >> answer;
 
     /* check the answer of the user */
-    if (answer == "y" || answer == "yes" || answer == "Y" || answer == "YES")
+    if (answer == "y" || answer == "yes" || answer == "Y" || answer == "YES" || answer == "Yes")
     {
       GetValidFilename(files.input_file, "dataset", true);
     }
@@ -43,7 +43,7 @@ void interface::ScanInput(interface::IOFiles& files, interface::ExitCode& status
     std::cin >> answer;
 
     /* check the answer of the user */
-    if (answer == "y" || answer == "yes" || answer == "Y" || answer == "YES")
+    if (answer == "y" || answer == "yes" || answer == "Y" || answer == "YES" || answer == "Yes")
     {
       GetValidFilename(files.query_file, "query", true);
     }
@@ -53,7 +53,7 @@ void interface::ScanInput(interface::IOFiles& files, interface::ExitCode& status
   /* if an output file has not been specified */
   if (files.output_file.empty())
   {
-    GetValidFilename(files.output_file, "output", true);
+    GetValidFilename(files.output_file, "output", false);
   }
   /* else, if we want to change it */
   else if (change_output)
@@ -64,9 +64,9 @@ void interface::ScanInput(interface::IOFiles& files, interface::ExitCode& status
     std::cin >> answer;
 
     /* check the answer of the user */
-    if (answer == "y" || answer == "yes" || answer == "Y" || answer == "YES")
+    if (answer == "y" || answer == "yes" || answer == "Y" || answer == "YES" || answer == "Yes")
     {
-      GetValidFilename(files.output_file, "output", true);
+      GetValidFilename(files.output_file, "output", false);
     }
   }
 }

@@ -93,7 +93,7 @@ int main(int argc, char const *argv[]) {
     std::cin >> answer;
 
     /* check the response of the user */
-    response = (answer == "y") || (answer == "Y") || (answer == "Yes") || (answer == "YES");
+    response = (answer == "y") || (answer == "Y") || (answer == "Yes") || (answer == "YES") || (answer == "yes");
 
     /* if a positive response was given */
     if (response) {

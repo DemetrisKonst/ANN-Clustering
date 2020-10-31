@@ -24,8 +24,14 @@ bool interface::FileIsAccessible(const std::string& path)
 {
   /* try to create the file */
 	std::ofstream file{path};
+  /* create a variable that will be returned */
+  bool is_accessible = (file) ? true : false;
+
+  /* close the file */
+  file.close();
+  
   /* return true if it succeeds; else false */
-  return (file) ? true : false;
+  return is_accessible;
 }
 
 

@@ -16,7 +16,7 @@ clusteringInterface.o:
 
 # compile Hypercube
 HC: HCMain HCInterface.o interface_utils.o interface.o
-	$(CC) -o bin/HC object/HCMain.o object/HCInterface.o object/interface_utils.o object/interface.o $(CFLAGS)
+	$(CC) -o bin/cube object/HCMain.o object/HCInterface.o object/interface_utils.o object/interface.o $(CFLAGS)
 
 HCMain:
 	$(CC) -c -o object/HCMain.o exc1/HCMain.cpp $(CFLAGS)
@@ -26,7 +26,7 @@ HCInterface.o:
 
 # compile LSH
 LSH: LSHMain LSHInterface.o interface_utils.o interface.o
-	$(CC) -o bin/LSH object/LSHMain.o object/LSH_interface.o object/interface_utils.o object/interface.o $(CFLAGS)
+	$(CC) -o bin/lsh object/LSHMain.o object/LSH_interface.o object/interface_utils.o object/interface.o $(CFLAGS)
 
 LSHMain:
 	$(CC) -c -o object/LSHMain.o exc1/LSHMain.cpp $(CFLAGS)

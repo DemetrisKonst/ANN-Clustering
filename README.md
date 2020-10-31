@@ -11,7 +11,7 @@ In this Project we implement algorithms and data structures that can be used to 
 1. Find *N* Approximate Nearest Neighbors (ANN) for any query point
 2. Group the data points together by performing Clustering
 
-Thus, the Project is split in two parts, the first one solves the (ANN) problem and the second one solves the Clustering problem.
+Thus, the Project is split in two parts, the first one solves the (ANN) problem and the second one solves the Clustering problem. An experimental Analysis for each part of the project can be found in the directory [Analysis](Analysis).
 <br> </br>
 
 ## A little bit about our Dataset
@@ -111,7 +111,7 @@ The code for LSH can be found under the [include/LSH](include/LSH) directory. It
 2. <u>Hypercube</u>
 The code for the randomized projection to a hypercube can found under [include/Hypercube](include/Hypercube). It contains one file:
     1. [include/Hypercube/Hypercube.hpp](include/Hypercube/Hypercube.hpp)
-        1. FFunc is used to represent the "f" function in which the result of an "h" function (implemented in [include/LSH/LSHFun.hpp](include/LSH/LSHFun.hpp) as HashFunction) is mapped to {0,1}. When initialized, a random integer is created within range (min, max) (given as arguments). Whenever an "h" value arrives, if that h value is less than the random integer, 0 is returned, else, 1 is returned. This range can be calculated through the mean and deviation of the "h" values. Specifically: [include/utils/ANN.hpp](include/utils/ANN.hpp) implements a function which calculates those values. The final range could be (mean-deviation, mean+deviation). 
+        1. FFunc is used to represent the "f" function in which the result of an "h" function (implemented in [include/LSH/LSHFun.hpp](include/LSH/LSHFun.hpp) as HashFunction) is mapped to {0,1}. When initialized, a random integer is created within range (min, max) (given as arguments). Whenever an "h" value arrives, if that h value is less than the random integer, 0 is returned, else, 1 is returned. This range can be calculated through the mean and deviation of the "h" values. Specifically: [include/utils/ANN.hpp](include/utils/ANN.hpp) implements a function which calculates those values. The final range could be (mean-deviation, mean+deviation).
         2. Hypercube combines [include/LSH/LSHFun.hpp](include/LSH/LSHFun.hpp)->HashFunction and FFunc to implement a Hypercube whose vertices contain items. Whenever an item arrives, all "h" and "f" function values are calculated. From that, a vector of {0,1} is constructed (represented as an integer) which is the vertex of the hypercube. This class also contains kNN and rangeSearch methods.
             1. kNN takes in 4 arguments: a query item, k (how many neighbors to be returned), probes (how many vertices to search), thresh(old) (how many total items to search). Until the probe and thresh end, starting from vertices with hamming distance = 0 (the startingVertex itself), then with hamming distance = 1 (the vertices next to startingVertex who only differ by one bit) etc. we search the whole vertex to find the k most similar vertices. This returns a sorted array (on ascending distance) of pairs of distance and item.
             2. rangeSearch instead of k, it takes in R as an argument which is the maximum distance an item to be returned must have. The probes are traversed in the same way as kNN, only this time, instead of searching for the k most similar, all items which are inside the "ball" created by R are returned (with their respective distances)
@@ -187,7 +187,7 @@ Here are some examples on how to run the compiled code:
     - N = 10, the number of Approximate Nearest Neighbors to find
     - R = 10000, the radius used to perform the Range Search LSH
     ```bash
-    $ ./bin/hypercube -d ./Dataset/train-images-idx3-ubyte
+    $ ./bin/cube -d ./Dataset/train-images-idx3-ubyte
                       -q ./Dataset/t10k-images-idx3-ubyte
                       -k 6
                       -M 10
@@ -199,13 +199,13 @@ Here are some examples on how to run the compiled code:
 
 3. Run the Clustering with
     - d = ./Dataset/train-images-idx3-ubyte, the path to the input file
-    - c = ./conf/cluster.conf, the path to the configuration file
+    - c = ./config/cluster.conf, the path to the configuration file
     - o = ./output/lsh_output.txt, the path to the output file
     - complete, flag given to log more information
     - m = LSH, the method to perform the Clustering with (available options are: Classic, LSH, Hypercube)
     ```bash
     $ ./bin/cluster -d ./Dataset/train-images-idx3-ubyte
-                    -c ./conf/cluster.conf
+                    -c ./config/cluster.conf
                     -ο ./output/lsh_output.txt
                     -complete
                     -m LSH
