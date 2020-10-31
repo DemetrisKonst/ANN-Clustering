@@ -5,6 +5,7 @@
 #include <ctime>
 #include <cstring>
 #include <cstdlib>
+#include <cmath>
 #include <vector>
 #include <random>
 #include <chrono>
@@ -20,6 +21,7 @@
 #include "../utils/cluster.hpp"
 #include "../LSH/LSH.hpp"
 #include "../Hypercube/Hypercube.hpp"
+#include "../utils/ANN.hpp"
 
 
 /* namespace used to implement clustering algorithms */
@@ -515,16 +517,19 @@ namespace clustering
           delete lsh;
         }
 
-        /* create and LSH input object */
+        /* create an LSH input object */
         interface::input::LSH::LSHInput lsh_input;
         /* assign the values that were given in the configuration file */
         lsh_input.k = LSH_k;
         lsh_input.L = LSH_L;
         radius = lsh_input.R / 2;
 
-        /* initialize the LSH object (note that 33000 was found as the averagr distance for the MNIST digit Dataset,
-           but this parameter can be changed) */
-        lsh = new LSH<T>(lsh_input, data, 4000);
+        /* compute the window size for LSH */
+        double average_item_distance = utils::averageDistance(0.05, data.items, data.n, data.dimension);
+        uint32_t window_constant = 1;
+        uint32_t window_size = (int) (window_constant * average_item_distance);
+        /* initialize the LSH object with a specific window size */
+        lsh = new LSH<T>(lsh_input, data, window_size);
       }
       else if (method == "Hypercube")
       {
@@ -534,7 +539,7 @@ namespace clustering
           delete hypercube;
         }
 
-        /* create and LSH input object */
+        /* create an Hypercube input object */
         interface::input::HC::HCInput hc_input;
         /* assign the values that were given in the configuration file */
         hc_input.k = HC_k;
@@ -542,8 +547,15 @@ namespace clustering
         hc_input.probes = HC_probes;
         radius = hc_input.R / 2;
 
-        /* initialize the LSH object */
-        hypercube = new Hypercube<T>(hc_input, data, 4000);
+        /* compute the window size for Hypercube */
+        double average_item_distance = utils::averageDistance(0.05, data.items, data.n, data.dimension);
+        uint32_t window_constant = 1;
+        uint32_t window_size = (int) (window_constant * average_item_distance);
+        std::pair<double, double> mean_dev = utils::calculateMeanDeviation(1, data.items, data.n, data.dimension, HC_k, window_size);
+        uint32_t f_min = floor(mean_dev.first - mean_dev.second);
+        uint32_t f_max = floor(mean_dev.first + mean_dev.second);
+        /* initialize the Hypercube object */
+        hypercube = new Hypercube<T>(hc_input, data, window_size, std::make_pair(f_min, f_max));
       }
     }
 
