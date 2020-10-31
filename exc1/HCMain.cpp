@@ -6,7 +6,7 @@
 #include "../include/interfaces/HC_interface.h"
 #include "../include/Hypercube/Hypercube.hpp"
 #include "../include/BruteForce/BruteForce.hpp"
-
+#include "../include/utils/ANN.hpp"
 
 int main(int argc, char const *argv[]) {
 
@@ -37,15 +37,26 @@ int main(int argc, char const *argv[]) {
   interface::Data<uint8_t> data(dataset);
 
 
-  /* initialize the data structures */
+  // Initialize Brute Force
   BruteForce<uint8_t> bf = BruteForce<uint8_t>(data);
-  /* calculate the window size (or set it to a default value) */
-  // double averageItemDistance = bf.averageDistance(0.05);
-  // int windowConstant = 4;
-  // int windowSize = (int) windowConstant*averageItemDistance;
-  int windowSize = 40000;
-  Hypercube<uint8_t> hc = Hypercube<uint8_t>(hc_input, data, windowSize);
 
+  // calculate the window size (or set it to a default value)
+  double averageItemDistance = utils::averageDistance<uint8_t>(0.05, data.items, data.n, data.dimension);
+  int windowConstant = 1;
+  int windowSize = (int) windowConstant*averageItemDistance;
+  // int windowSize = 40000;
+  // std::cout << "Window Size: " << windowSize << '\n';
+
+  // Calculate the f range through mean and deviation (or set it to default values)
+  std::pair<double, double> meanDev = utils::calculateMeanDeviation(1, data.items, data.n, data.dimension, hc_input.k, windowSize);
+  int fMin = floor(meanDev.first - meanDev.second);
+  int fMax = floor(meanDev.first + meanDev.second);
+  // int fMin = 0;
+  // int fMax = pow(2, 32/hc_input.k);
+  // std::cout << "F_Range: [" << fMin << ", " << fMax << "]" << '\n';
+
+  // Initialize Hypercube
+  Hypercube<uint8_t> hc = Hypercube<uint8_t>(hc_input, data, windowSize, std::make_pair(fMin, fMax));
 
   /* get the query set and and output file, in case they are not provided by the command line parameters */
   interface::ScanInput(files, status, false, files.query_file.empty(), files.output_file.empty());

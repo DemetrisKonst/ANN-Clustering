@@ -5,7 +5,8 @@
 
 #include "../core/item.hpp"
 #include "../metrics/metrics.hpp"
-#include "../utils/lsh_hc.hpp"
+#include "../utils/ANN.hpp"
+#include "../LSH/LSHFun.hpp"
 
 /*
 The following class implements a simple brute force implementation of kNN and RangeSearch
@@ -30,32 +31,6 @@ public:
 
   ~BruteForce () {
 
-  }
-
-  /*
-  Method to calculate the averageDistance between a portion of the items.
-  This is used to calculate a "proper" window size for LSH & Hypercube
-  */
-  double averageDistance (double datasetPercentage) {
-    // Calculate the size of the partition
-    int partitionSize = floor(datasetPercentage*imageCount);
-
-    // For each item inside the partition...
-    double outerSum = 0.0;
-    for (int i = 0; i < partitionSize; i++) {
-      int innerSum = 0;
-      // Traverse each other item inside the partition
-      for (int j = 0; j < partitionSize; j++) {
-        if (i == j) continue;
-        // Calculate the distance between the two items (and summarize it)
-        innerSum += metrics::ManhattanDistance<T>(items[i]->data, items[j]->data, dimension);
-      }
-      // Then calculate the average distance of 1 item from all other items
-      outerSum += 1.0*innerSum/partitionSize;
-    }
-
-    // Then calculate the average distance of all items from all other items
-    return outerSum/partitionSize;
   }
 
   /*
@@ -87,7 +62,7 @@ public:
         if (d[N-1].second->null)
           delete d[N-1].second;
         d[N-1].second = items[i];
-        std::sort(d.begin(), d.end(), comparePairs<T>);
+        std::sort(d.begin(), d.end(), utils::comparePairs<T>);
       }
 
       /*
@@ -134,6 +109,9 @@ public:
           tmpDistVec.push_back( (double) kNNRes[j].first);
         }
       }
+
+      if ((i+1)%1000 == 0)
+        std::cout << "BF: " << i+1 << " query items..." << '\n';
 
       // Push all information gained by this loop into the respective vectors
       distVec.push_back(tmpDistVec);

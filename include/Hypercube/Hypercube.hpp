@@ -4,7 +4,7 @@
 #include "../LSH/LSHFun.hpp"
 #include "../metrics/metrics.hpp"
 #include "../interfaces/HC_interface.h"
-#include "../utils/lsh_hc.hpp"
+#include "../utils/ANN.hpp"
 
 /*
 This class is responsible for mapping "HashFunction->HashVector()" values into {0,1}.
@@ -46,6 +46,8 @@ private:
 
   // Array of f functions
   FFunction** mapFun;
+  int fMin;
+  int fMax;
   // Array of h functions
   HashFunction<T>** LSHFun;
 
@@ -141,7 +143,8 @@ private:
   }
 
 public:
-  Hypercube(interface::input::HC::HCInput& hci, const interface::Data<T>& ds, int ws) : windowSize(ws) {
+  Hypercube(interface::input::HC::HCInput& hci, const interface::Data<T>& ds, int ws, std::pair<int, int> F_Range)
+  : windowSize(ws), fMin(F_Range.first), fMax(F_Range.second) {
     HCDimension = hci.k;
     imageCount = ds.n;
     dataDimension = ds.dimension;
@@ -171,7 +174,7 @@ public:
     mapFun = new FFunction*[HCDimension];
     for (int i = 0; i < HCDimension; i++) {
       LSHFun[i] = new HashFunction<T>(windowSize, HCDimension, dataDimension, m_mod_MValues);
-      mapFun[i] = new FFunction(100, 200);
+      mapFun[i] = new FFunction(fMin, fMax);
     }
 
     // For every item given by the input set, add it to its respective vertex
@@ -180,7 +183,7 @@ public:
       H[vertex].push_back(items[i]);
 
       if ((i+1)%10000 == 0)
-        std::cout << "Hypercube: " <<  i+1 << " items..." << '\n';
+        std::cout << "Hypercube: " <<  i+1 << " training items..." << '\n';
     }
   }
 
@@ -230,7 +233,7 @@ public:
           if (d[N-1].second->null)
             delete d[N-1].second;
           d[N-1].second = avProbes[i][j];
-          std::sort(d.begin(), d.end(), comparePairs<T>);
+          std::sort(d.begin(), d.end(), utils::comparePairs<T>);
         }
 
         // If threshold is 0, it indicates that there is no threshold
@@ -340,6 +343,9 @@ public:
           tmpRsVec.push_back(rsRes[j].second->id);
         }
       }
+
+      if ((i+1)%1000 == 0)
+        std::cout << "Hypercube: " << i+1 << " query items..." << '\n';
 
       // Push all temporary vectors into their "parent" vectors
       neighborIdVec.push_back(tmpNVec);

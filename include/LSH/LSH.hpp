@@ -7,7 +7,7 @@
 #include "../core/item.hpp"
 #include "LSHFun.hpp"
 #include "../metrics/metrics.hpp"
-#include "../utils/lsh_hc.hpp"
+#include "../utils/ANN.hpp"
 
 /*
 The following class implements the LSH data structure.
@@ -91,7 +91,7 @@ public:
       }
 
       if ((a+1)%10000 == 0)
-        std::cout << "LSH: " << a+1 << " items..." << '\n';
+        std::cout << "LSH: " << a+1 << " training items..." << '\n';
     }
   }
 
@@ -151,7 +151,7 @@ public:
           if (d[N-1].second->null)
             delete d[N-1].second;
           d[N-1].second = H[i][bucket][j];
-          std::sort(d.begin(), d.end(), comparePairs<T>);
+          std::sort(d.begin(), d.end(), utils::comparePairs<T>);
         }
 
         /*
@@ -270,6 +270,9 @@ public:
           tmpRsVec.push_back(rsRes[j].second->id);
         }
       }
+
+      if ((i+1)%1000 == 0)
+        std::cout << "LSH: " << i+1 << " query items..." << '\n';
 
       // Push all temporary vectors into their "parent" vectors
       neighborIdVec.push_back(tmpNVec);
